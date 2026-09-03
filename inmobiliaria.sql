@@ -189,7 +189,37 @@ ALTER TABLE ONLY public.inmueble
 
 
 -- Completed on 2026-08-20 19:49:08
+--
+-- Name: inquilino; Type: TABLE; Schema: public; Owner: -
+--
 
+CREATE TABLE public.inquilino (
+    id integer NOT NULL,
+    nombre character varying(100) NOT NULL,
+    apellido character varying(100) NOT NULL,
+    dni character varying(20) NOT NULL,
+    telefono character varying(30),
+    email character varying(150)
+);
+
+--
+-- Name: inquilino_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.inquilino_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE public.inquilino_id_seq OWNED BY public.inquilino.id;
+
+ALTER TABLE ONLY public.inquilino ALTER COLUMN id SET DEFAULT nextval('public.inquilino_id_seq'::regclass);
+
+ALTER TABLE ONLY public.inquilino
+    ADD CONSTRAINT inquilino_pkey PRIMARY KEY (id);
 --
 -- PostgreSQL database dump complete
 --
