@@ -1,112 +1,109 @@
 ﻿<!DOCTYPE html>
 <html lang="es">
+
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Inmobiliaria</title>
+  <title>Inmobiliaria</title>
 
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/mvc.styles.css" asp-append-version="true" />
+  <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+  <link rel="stylesheet" href="~/mvc.styles.css" asp-append-version="true" />
 </head>
 
 <body>
 
-    <!-- =====================================================
+  <!-- =====================================================
          BARRA DE NAVEGACIÓN
          ===================================================== -->
 
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
+  <header>
+    <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
 
-            <div class="container-fluid">
+      <div class="container-fluid">
 
-                <!-- Nombre del proyecto -->
-                <a class="navbar-brand"
-                   asp-controller="Propietario"
-                   asp-action="Index">
-                    Inmobiliaria
-                </a>
+        <!-- Nombre del proyecto -->
+        <a class="navbar-brand" asp-controller="Propietario" asp-action="Index">
+          Inmobiliaria
+        </a>
 
-                <!-- Botón para pantallas pequeñas -->
-                <button class="navbar-toggler"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target=".navbar-collapse"
-                        aria-controls="navbarSupportedContent"
-                        aria-expanded="false"
-                        aria-label="Mostrar navegación">
+        <!-- Botón para pantallas pequeñas -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Mostrar navegación">
 
-                    <span class="navbar-toggler-icon"></span>
+          <span class="navbar-toggler-icon"></span>
 
-                </button>
+        </button>
 
-                <!-- Opciones de navegación -->
-                <div class="navbar-collapse collapse d-sm-inline-flex">
+        <!-- Opciones de navegación -->
+        <div class="navbar-collapse collapse d-sm-inline-flex">
 
-                    <ul class="navbar-nav">
+          <ul class="navbar-nav">
 
-                        <!-- Propietarios -->
-                        <li class="nav-item">
-                            <a class="nav-link text-dark"
-                               asp-controller="Propietario"
-                               asp-action="Index">
-                                Propietarios
-                            </a>
-                        </li>
+            <!-- Propietarios -->
+            <li class="nav-item">
+              <a class="nav-link text-dark" asp-controller="Propietario" asp-action="Index">
+                Propietarios
+              </a>
+            </li>
 
-                        <!-- Inmuebles -->
-                        <li class="nav-item">
-                            <a class="nav-link text-dark"
-                               asp-controller="Inmueble"
-                               asp-action="Index">
-                                Inmuebles
-                            </a>
-                        </li>
+            <!-- Inmuebles -->
+            <li class="nav-item">
+              <a class="nav-link text-dark" asp-controller="Inmueble" asp-action="Index">
+                Inmuebles
+              </a>
+            </li>
+            <!-- Inquilinos -->
+            <li class="nav-item">
+              <a class="nav-link text-dark" asp-controller="Inquilino" asp-action="Index">
+                Inquilinos
+              </a>
+            </li>
 
-                    </ul>
+          </ul>
 
-                </div>
+        </div>
 
-            </div>
+      </div>
 
-        </nav>
-    </header>
+    </nav>
+  </header>
 
 
-    <!-- =====================================================
+  <!-- =====================================================
          CONTENIDO DE LA PÁGINA
          ===================================================== -->
 
-    <div class="container">
+  <div class="container">
 
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+    <main role="main" class="pb-3">
+      @RenderBody()
+    </main>
 
-    </div>
+  </div>
 
 
-    <!-- =====================================================
+  <!-- =====================================================
          PIE DE PÁGINA
          ===================================================== -->
 
-    <footer class="border-top footer text-muted">
+  <footer class="border-top footer text-muted">
 
-        <div class="container">
-            &copy; 2026 - Inmobiliaria
-        </div>
+    <div class="container">
+      &copy; 2026 - Inmobiliaria
+    </div>
 
-    </footer>
+  </footer>
 
 
-    <!-- Scripts -->
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+  <!-- Scripts -->
+  <script src="~/lib/jquery/dist/jquery.min.js"></script>
+  <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="~/js/site.js" asp-append-version="true"></script>
 
-    @await RenderSectionAsync("Scripts", required: false)
+  @await RenderSectionAsync("Scripts", required: false)
 
 </body>
+
 </html>
