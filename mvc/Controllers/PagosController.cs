@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using mvc.Models;
 
@@ -8,11 +9,11 @@ namespace mvc.Controllers
     [Authorize]
     public class PagosController : Controller
     {
-        private readonly IRepositorioPago _repo;
+        private readonly AppDbContext _context;
 
-        public PagosController(IRepositorioPago repo)
+        public PagosController(AppDbContext context)
         {
-            _repo = repo;
+            _context = context;
         }
 
         // =====================================================
@@ -20,7 +21,29 @@ namespace mvc.Controllers
         // =====================================================
         public async Task<IActionResult> Index(int idReserva)
         {
-            var pagos = await _repo.ListarPorReserva(idReserva);
+            var pagos = await _context.Pagos
+                .Where(p => p.ReservaId == idReserva)
+                .OrderByDescending(p => p.Fecha)
+                .ThenByDescending(p => p.Id)
+                .ToListAsync();
+
+            // Cargamos nombres de usuarios para la auditoría
+            var idsUsuarios = pagos.Select(p => p.UsuarioCreadorId)
+                .Union(pagos.Where(p => p.UsuarioAnuladorId.HasValue).Select(p => p.UsuarioAnuladorId!.Value))
+                .Distinct();
+
+            var nombres = await _context.Usuarios
+                .Where(u => idsUsuarios.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => u.NombreCompleto);
+
+            foreach (var pago in pagos)
+            {
+                pago.NombreUsuarioCreador = nombres.GetValueOrDefault(pago.UsuarioCreadorId);
+                pago.NombreUsuarioAnulador = pago.UsuarioAnuladorId.HasValue
+                    ? nombres.GetValueOrDefault(pago.UsuarioAnuladorId.Value)
+                    : null;
+            }
+
             ViewBag.ReservaId = idReserva;
             return View(pagos);
         }
@@ -52,7 +75,8 @@ namespace mvc.Controllers
                 return View(pago);
             }
 
-            await _repo.Crear(pago);
+            _context.Pagos.Add(pago);
+            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index), new { idReserva = pago.ReservaId });
         }
@@ -62,7 +86,7 @@ namespace mvc.Controllers
         // =====================================================
         public async Task<IActionResult> EditarConcepto(int id)
         {
-            var pago = await _repo.ObtenerPorId(id);
+            var pago = await _context.Pagos.FindAsync(id);
 
             if (pago == null)
             {
@@ -88,7 +112,14 @@ namespace mvc.Controllers
                 return View(vm);
             }
 
-            await _repo.EditarConcepto(vm.Id, vm.Concepto);
+            var pago = await _context.Pagos.FindAsync(vm.Id);
+            if (pago == null)
+            {
+                return NotFound();
+            }
+
+            pago.Concepto = vm.Concepto;
+            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index), new { idReserva = vm.ReservaId });
         }
@@ -100,14 +131,16 @@ namespace mvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Anular(int id, int reservaId)
         {
-            var pago = await _repo.ObtenerPorId(id);
+            var pago = await _context.Pagos.FindAsync(id);
 
             if (pago == null)
             {
                 return NotFound();
             }
 
-            await _repo.Anular(id, ObtenerIdUsuarioActual());
+            pago.Anulado = true;
+            pago.UsuarioAnuladorId = ObtenerIdUsuarioActual();
+            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index), new { idReserva = reservaId });
         }

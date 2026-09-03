@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 namespace mvc.Models
 {
     public class Pago
@@ -37,8 +38,10 @@ namespace mvc.Models
         public string? ComprobanteUrl { get; set; }
 
         // Auxiliares para mostrar auditoría en la vista de detalles
+        [NotMapped]
         public string? NombreUsuarioCreador { get; set; }
 
+        [NotMapped]
         public string? NombreUsuarioAnulador { get; set; }
     }
 }

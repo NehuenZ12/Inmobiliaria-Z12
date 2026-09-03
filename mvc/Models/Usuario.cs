@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace mvc.Models
 {
@@ -33,6 +34,7 @@ namespace mvc.Models
         [RegularExpression(@"^(Administrador|Empleado)$", ErrorMessage = "El rol debe ser Administrador o Empleado")]
         public string Rol { get; set; } = "Empleado";
 
+        [NotMapped]
         public string NombreCompleto => $"{Nombre} {Apellido}".Trim();
     }
 }

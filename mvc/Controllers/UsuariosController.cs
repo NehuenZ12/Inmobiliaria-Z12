@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using mvc.Models;
 
@@ -11,16 +12,16 @@ namespace mvc.Controllers
     [Authorize]
     public class UsuariosController : Controller
     {
-        private readonly IRepositorioUsuario _repo;
+        private readonly AppDbContext _context;
         private readonly IPasswordHasher<Usuario> _hasher;
         private readonly IWebHostEnvironment _env;
 
         public UsuariosController(
-            IRepositorioUsuario repo,
+            AppDbContext context,
             IPasswordHasher<Usuario> hasher,
             IWebHostEnvironment env)
         {
-            _repo = repo;
+            _context = context;
             _hasher = hasher;
             _env = env;
         }
@@ -31,7 +32,11 @@ namespace mvc.Controllers
         [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Index()
         {
-            var usuarios = await _repo.ObtenerTodos();
+            var usuarios = await _context.Usuarios
+                .OrderBy(u => u.Apellido)
+                .ThenBy(u => u.Nombre)
+                .ToListAsync();
+
             return View(usuarios);
         }
 
@@ -58,7 +63,8 @@ namespace mvc.Controllers
             }
 
             // Buscamos el usuario por email y validamos la clave
-            var usuario = await _repo.ObtenerPorEmail(login.Email);
+            var usuario = await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.Email == login.Email);
 
             var esValido = usuario != null &&
                 _hasher.VerifyHashedPassword(usuario, usuario.Clave, login.Clave) != PasswordVerificationResult.Failed;
@@ -115,7 +121,7 @@ namespace mvc.Controllers
                 return RedirectToAction("Restringido", "Home");
             }
 
-            var usuario = await _repo.ObtenerPorId(idSolicitado);
+            var usuario = await _context.Usuarios.FindAsync(idSolicitado);
 
             if (usuario == null)
             {
@@ -158,29 +164,33 @@ namespace mvc.Controllers
                 return View(usuario);
             }
 
-            // Guardamos el avatar si subieron uno
-            usuario.Avatar = await GuardarAvatarAsync(avatar, usuario.Avatar);
+            // Traemos el usuario original para actualizar solo los campos permitidos
+            var actual = await _context.Usuarios.FindAsync(id);
+            if (actual == null)
+            {
+                return NotFound();
+            }
+
+            actual.Nombre = usuario.Nombre;
+            actual.Apellido = usuario.Apellido;
+            actual.Email = usuario.Email;
+            actual.Avatar = await GuardarAvatarAsync(avatar, actual.Avatar);
 
             // Hasheamos la clave si el usuario la cambió
             if (!string.IsNullOrWhiteSpace(usuario.Clave))
             {
-                usuario.Clave = _hasher.HashPassword(usuario, usuario.Clave);
+                actual.Clave = _hasher.HashPassword(usuario, usuario.Clave);
             }
 
-            // Si no es admin, no permitimos cambiar el rol desde acá
-            if (!EsAdmin())
+            // Solo un admin puede cambiar el rol desde acá
+            if (EsAdmin())
             {
-                var actual = await _repo.ObtenerPorId(id);
-                if (actual != null)
-                {
-                    usuario.Rol = actual.Rol;
-                }
+                actual.Rol = usuario.Rol;
             }
 
-            // Si la clave quedó vacía, no se actualiza (lo maneja el repositorio)
-            await _repo.Guardar(usuario);
+            await _context.SaveChangesAsync();
 
-            return RedirectToAction("Perfil", new { id = usuario.Id });
+            return RedirectToAction("Perfil", new { id = actual.Id });
         }
 
         // =====================================================
@@ -208,7 +218,8 @@ namespace mvc.Controllers
             // Guardamos el avatar si subieron uno
             usuario.Avatar = await GuardarAvatarAsync(avatar, null);
 
-            await _repo.Guardar(usuario);
+            _context.Usuarios.Add(usuario);
+            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
         }
@@ -227,7 +238,15 @@ namespace mvc.Controllers
                 return RedirectToAction("Index");
             }
 
-            await _repo.Eliminar(id);
+            var usuario = await _context.Usuarios.FindAsync(id);
+            if (usuario == null)
+            {
+                return NotFound();
+            }
+
+            _context.Usuarios.Remove(usuario);
+            await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 

@@ -13,6 +13,12 @@ namespace mvc.Models
 
         public DbSet<Inmueble> Inmuebles { get; set; }
 
+        public DbSet<Usuario> Usuarios { get; set; }
+
+        public DbSet<Reserva> Reservas { get; set; }
+
+        public DbSet<Pago> Pagos { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Tabla Propietario
@@ -93,6 +99,129 @@ namespace mvc.Models
                 .HasOne(i => i.Propietario)
                 .WithMany()
                 .HasForeignKey(i => i.PropietarioId);
+
+
+            // USUARIO
+
+            modelBuilder.Entity<Usuario>().ToTable("usuario");
+
+            modelBuilder.Entity<Usuario>()
+                .Property(u => u.Id)
+                .HasColumnName("id_usuario");
+
+            modelBuilder.Entity<Usuario>()
+                .Property(u => u.Nombre)
+                .HasColumnName("nombre");
+
+            modelBuilder.Entity<Usuario>()
+                .Property(u => u.Apellido)
+                .HasColumnName("apellido");
+
+            modelBuilder.Entity<Usuario>()
+                .Property(u => u.Email)
+                .HasColumnName("email");
+
+            modelBuilder.Entity<Usuario>()
+                .Property(u => u.Clave)
+                .HasColumnName("clave");
+
+            modelBuilder.Entity<Usuario>()
+                .Property(u => u.Avatar)
+                .HasColumnName("avatar");
+
+            modelBuilder.Entity<Usuario>()
+                .Property(u => u.Rol)
+                .HasColumnName("rol");
+
+            modelBuilder.Entity<Usuario>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+
+
+            // RESERVA (solo campos de auditoría en nuestro alcance)
+
+            modelBuilder.Entity<Reserva>().ToTable("reserva");
+
+            modelBuilder.Entity<Reserva>()
+                .Property(r => r.Id)
+                .HasColumnName("id");
+
+            modelBuilder.Entity<Reserva>()
+                .Property(r => r.UsuarioCreadorId)
+                .HasColumnName("usuario_creador_id");
+
+            modelBuilder.Entity<Reserva>()
+                .Property(r => r.UsuarioTerminadorId)
+                .HasColumnName("usuario_terminador_id");
+
+
+            // PAGO
+
+            modelBuilder.Entity<Pago>().ToTable("pago");
+
+            modelBuilder.Entity<Pago>()
+                .Property(p => p.Id)
+                .HasColumnName("id");
+
+            modelBuilder.Entity<Pago>()
+                .Property(p => p.Fecha)
+                .HasColumnName("fecha");
+
+            modelBuilder.Entity<Pago>()
+                .Property(p => p.Concepto)
+                .HasColumnName("concepto");
+
+            modelBuilder.Entity<Pago>()
+                .Property(p => p.Importe)
+                .HasColumnName("importe")
+                .HasPrecision(12, 2);
+
+            modelBuilder.Entity<Pago>()
+                .Property(p => p.ReservaId)
+                .HasColumnName("reserva_id");
+
+            modelBuilder.Entity<Pago>()
+                .Property(p => p.Anulado)
+                .HasColumnName("anulado");
+
+            modelBuilder.Entity<Pago>()
+                .Property(p => p.UsuarioCreadorId)
+                .HasColumnName("usuario_creador_id");
+
+            modelBuilder.Entity<Pago>()
+                .Property(p => p.UsuarioAnuladorId)
+                .HasColumnName("usuario_anulador_id");
+
+            modelBuilder.Entity<Pago>()
+                .Property(p => p.Metodo)
+                .HasColumnName("metodo")
+                .HasConversion<string>();
+
+            modelBuilder.Entity<Pago>()
+                .Property(p => p.Estado)
+                .HasColumnName("estado")
+                .HasConversion<string>();
+
+            modelBuilder.Entity<Pago>()
+                .Property(p => p.ComprobanteUrl)
+                .HasColumnName("comprobante_url");
+
+            // Relaciones de auditoría
+            modelBuilder.Entity<Pago>()
+                .HasOne<Reserva>()
+                .WithMany()
+                .HasForeignKey(p => p.ReservaId);
+
+            modelBuilder.Entity<Pago>()
+                .HasOne<Usuario>()
+                .WithMany()
+                .HasForeignKey(p => p.UsuarioCreadorId);
+
+            modelBuilder.Entity<Pago>()
+                .HasOne<Usuario>()
+                .WithMany()
+                .HasForeignKey(p => p.UsuarioAnuladorId)
+                .IsRequired(false);
         }
     }
 }
