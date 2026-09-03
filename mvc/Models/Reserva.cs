@@ -34,5 +34,11 @@ namespace mvc.Models
     // Auxiliares para mostrar auditoría en la vista de detalles
     public string? NombreUsuarioCreador { get; set; }
     public string? NombreUsuarioTerminador { get; set; }
+    // Auxiliares para mostrar el inquilino y el inmueble en los listados
+    public string? NombreInquilino { get; set; }
+    public string? DireccionInmueble { get; set; }
+
+    // Calculado: no se guarda en la base, se calcula solo a partir de las fechas y el monto
+    public decimal ImporteTotal => (decimal)(FechaHasta - FechaDesde).TotalDays * MontoDiario;
   }
 }
