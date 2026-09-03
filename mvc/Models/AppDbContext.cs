@@ -152,13 +152,37 @@ namespace mvc.Models
           .HasColumnName("rol");
 
 
-      // RESERVA (estructura base, se completa cuando se agreguen los campos de negocio)
+      // RESERVA
 
       modelBuilder.Entity<Reserva>().ToTable("reserva");
 
       modelBuilder.Entity<Reserva>()
           .Property(r => r.Id)
           .HasColumnName("id");
+
+      modelBuilder.Entity<Reserva>()
+          .Property(r => r.InquilinoId)
+          .HasColumnName("inquilino_id");
+
+      modelBuilder.Entity<Reserva>()
+          .Property(r => r.InmuebleId)
+          .HasColumnName("inmueble_id");
+
+      modelBuilder.Entity<Reserva>()
+          .Property(r => r.FechaDesde)
+          .HasColumnName("fecha_desde");
+
+      modelBuilder.Entity<Reserva>()
+          .Property(r => r.FechaHasta)
+          .HasColumnName("fecha_hasta");
+
+      modelBuilder.Entity<Reserva>()
+          .Property(r => r.MontoDiario)
+          .HasColumnName("monto_diario");
+
+      modelBuilder.Entity<Reserva>()
+          .Property(r => r.FechaTerminacion)
+          .HasColumnName("fecha_terminacion");
 
       modelBuilder.Entity<Reserva>()
           .Property(r => r.UsuarioCreadorId)
@@ -177,6 +201,16 @@ namespace mvc.Models
           .HasOne<Usuario>()
           .WithMany()
           .HasForeignKey(r => r.UsuarioTerminadorId);
+
+      modelBuilder.Entity<Reserva>()
+          .HasOne<Inquilino>()
+          .WithMany()
+          .HasForeignKey(r => r.InquilinoId);
+
+      modelBuilder.Entity<Reserva>()
+          .HasOne<Inmueble>()
+          .WithMany()
+          .HasForeignKey(r => r.InmuebleId);
 
       // PAGO
 
