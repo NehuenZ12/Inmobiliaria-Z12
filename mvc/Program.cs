@@ -14,6 +14,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+// REPOSITORIOS ADO.NET
+builder.Services.AddScoped<IRepositorioUsuario, RepositorioUsuario>();
+builder.Services.AddScoped<IRepositorioPago, RepositorioPago>();
+
 // HASHER DE CLAVES (para no guardar texto plano)
 builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 

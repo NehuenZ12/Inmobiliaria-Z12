@@ -1,0 +1,21 @@
+@model mvc.Models.EditarConceptoPagoViewModel
+
+<h1>Editar concepto</h1>
+
+<form asp-action="EditarConcepto" method="post">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="ReservaId" />
+
+    <div class="mb-3">
+        <label asp-for="Concepto" class="form-label">Concepto</label>
+        <input asp-for="Concepto" class="form-control" />
+        <span asp-validation-for="Concepto" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a asp-action="Index" asp-route-idReserva="@Model.ReservaId" class="btn btn-secondary">Cancelar</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

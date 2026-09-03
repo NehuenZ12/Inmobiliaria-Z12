@@ -1,0 +1,71 @@
+@model IEnumerable<mvc.Models.Pago>
+
+<h1>Pagos de la reserva @ViewBag.ReservaId</h1>
+
+<a asp-action="Crear" asp-route-reservaId="@ViewBag.ReservaId" class="btn btn-primary mb-3">
+    Nuevo pago
+</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Concepto</th>
+            <th>Importe</th>
+            <th>Método</th>
+            <th>Estado</th>
+            <th>Anulado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var pago in Model)
+        {
+            <tr class="@(pago.Anulado ? "table-secondary" : "")">
+                <td>@pago.Fecha.ToShortDateString()</td>
+                <td>@pago.Concepto</td>
+                <td>@pago.Importe.ToString("C")</td>
+                <td>@pago.Metodo</td>
+                <td>@pago.Estado</td>
+                <td>
+                    @if (pago.Anulado)
+                    {
+                        <span class="badge bg-secondary">Sí</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">No</span>
+                    }
+                </td>
+                <td>
+                    @if (!pago.Anulado)
+                    {
+                        <a asp-action="EditarConcepto" asp-route-id="@pago.Id" class="btn btn-primary btn-sm">Editar concepto</a>
+
+                        <form asp-action="Anular" asp-route-id="@pago.Id" asp-route-reservaId="@pago.ReservaId" method="post" style="display:inline">
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Anular este pago?')">Anular</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+
+            @if (User.IsInRole("Administrador") && (!string.IsNullOrEmpty(pago.NombreUsuarioCreador) || !string.IsNullOrEmpty(pago.NombreUsuarioAnulador)))
+            {
+                <tr class="@(pago.Anulado ? "table-secondary" : "")">
+                    <td colspan="7" class="text-muted small">
+                        @if (!string.IsNullOrEmpty(pago.NombreUsuarioCreador))
+                        {
+                            <span>Creado por: @pago.NombreUsuarioCreador</span>
+                        }
+                        @if (!string.IsNullOrEmpty(pago.NombreUsuarioAnulador))
+                        {
+                            <span class="ms-3">Anulado por: @pago.NombreUsuarioAnulador</span>
+                        }
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<a asp-controller="Propietario" asp-action="Index" class="btn btn-secondary">Volver</a>

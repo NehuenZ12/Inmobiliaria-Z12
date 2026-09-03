@@ -2,13 +2,6 @@
 
 <h1>Crear usuario</h1>
 
-@if (!User.Identity.IsAuthenticated)
-{
-    <div class="alert alert-info">
-        No hay usuarios registrados. Se creará el primer administrador del sistema.
-    </div>
-}
-
 <form asp-action="Crear" method="post" enctype="multipart/form-data">
     <div class="mb-3">
         <label asp-for="Nombre" class="form-label">Nombre</label>
@@ -34,21 +27,14 @@
         <span asp-validation-for="Clave" class="text-danger"></span>
     </div>
 
-    @if (User.IsInRole("Administrador"))
-    {
-        <div class="mb-3">
-            <label asp-for="Rol" class="form-label">Rol</label>
-            <select asp-for="Rol" class="form-select">
-                <option value="Empleado">Empleado</option>
-                <option value="Administrador">Administrador</option>
-            </select>
-            <span asp-validation-for="Rol" class="text-danger"></span>
-        </div>
-    }
-    else
-    {
-        <input type="hidden" asp-for="Rol" value="Administrador" />
-    }
+    <div class="mb-3">
+        <label asp-for="Rol" class="form-label">Rol</label>
+        <select asp-for="Rol" class="form-select">
+            <option value="Empleado">Empleado</option>
+            <option value="Administrador">Administrador</option>
+        </select>
+        <span asp-validation-for="Rol" class="text-danger"></span>
+    </div>
 
     <div class="mb-3">
         <label class="form-label">Avatar</label>
@@ -56,7 +42,7 @@
     </div>
 
     <button type="submit" class="btn btn-primary">Guardar</button>
-    <a asp-controller="Propietario" asp-action="Index" class="btn btn-secondary">Volver</a>
+    <a asp-action="Index" class="btn btn-secondary">Volver</a>
 </form>
 
 @section Scripts {

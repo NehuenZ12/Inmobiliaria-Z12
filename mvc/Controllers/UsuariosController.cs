@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using mvc.Models;
 
@@ -12,16 +11,16 @@ namespace mvc.Controllers
     [Authorize]
     public class UsuariosController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly IRepositorioUsuario _repo;
         private readonly IPasswordHasher<Usuario> _hasher;
         private readonly IWebHostEnvironment _env;
 
         public UsuariosController(
-            AppDbContext context,
+            IRepositorioUsuario repo,
             IPasswordHasher<Usuario> hasher,
             IWebHostEnvironment env)
         {
-            _context = context;
+            _repo = repo;
             _hasher = hasher;
             _env = env;
         }
@@ -32,11 +31,7 @@ namespace mvc.Controllers
         [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Index()
         {
-            var usuarios = await _context.Usuarios
-                .OrderBy(u => u.Apellido)
-                .ThenBy(u => u.Nombre)
-                .ToListAsync();
-
+            var usuarios = await _repo.ObtenerTodos();
             return View(usuarios);
         }
 
@@ -63,8 +58,7 @@ namespace mvc.Controllers
             }
 
             // Buscamos el usuario por email y validamos la clave
-            var usuario = await _context.Usuarios
-                .FirstOrDefaultAsync(u => u.Email == login.Email);
+            var usuario = await _repo.ObtenerPorEmail(login.Email);
 
             var esValido = usuario != null &&
                 _hasher.VerifyHashedPassword(usuario, usuario.Clave, login.Clave) != PasswordVerificationResult.Failed;
@@ -75,7 +69,7 @@ namespace mvc.Controllers
                 return View(login);
             }
 
-            // Claims de identidad
+            // Claims de identidad: guardamos el id como NameIdentifier para auditoría
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, usuario!.Id.ToString()),
@@ -121,7 +115,7 @@ namespace mvc.Controllers
                 return RedirectToAction("Restringido", "Home");
             }
 
-            var usuario = await _context.Usuarios.FindAsync(idSolicitado);
+            var usuario = await _repo.ObtenerPorId(idSolicitado);
 
             if (usuario == null)
             {
@@ -164,74 +158,45 @@ namespace mvc.Controllers
                 return View(usuario);
             }
 
-            // Traemos el usuario original para actualizar solo los campos permitidos
-            var actual = await _context.Usuarios.FindAsync(id);
-            if (actual == null)
-            {
-                return NotFound();
-            }
-
-            actual.Nombre = usuario.Nombre;
-            actual.Apellido = usuario.Apellido;
-            actual.Email = usuario.Email;
-            actual.Avatar = await GuardarAvatarAsync(avatar, actual.Avatar);
+            // Guardamos el avatar si subieron uno
+            usuario.Avatar = await GuardarAvatarAsync(avatar, usuario.Avatar);
 
             // Hasheamos la clave si el usuario la cambió
             if (!string.IsNullOrWhiteSpace(usuario.Clave))
             {
-                actual.Clave = _hasher.HashPassword(usuario, usuario.Clave);
+                usuario.Clave = _hasher.HashPassword(usuario, usuario.Clave);
             }
 
-            // Solo un admin puede cambiar el rol desde acá
-            if (EsAdmin())
+            // Si no es admin, no permitimos cambiar el rol desde acá
+            if (!EsAdmin())
             {
-                actual.Rol = usuario.Rol;
+                var actual = await _repo.ObtenerPorId(id);
+                if (actual != null)
+                {
+                    usuario.Rol = actual.Rol;
+                }
             }
 
-            await _context.SaveChangesAsync();
+            // Si la clave quedó vacía, no se actualiza (lo maneja el repositorio)
+            await _repo.Guardar(usuario);
 
-            return RedirectToAction("Perfil", new { id = actual.Id });
+            return RedirectToAction("Perfil", new { id = usuario.Id });
         }
 
         // =====================================================
-        // CREAR USUARIO
-        // Acceso anónimo solo si no hay usuarios (primer administrador)
+        // CREAR USUARIO (solo administradores)
         // =====================================================
-        [AllowAnonymous]
-        public async Task<IActionResult> Crear()
+        [Authorize(Roles = "Administrador")]
+        public IActionResult Crear()
         {
-            if (!await PuedeAccederACrear())
-            {
-                return RedirectToAction("Restringido", "Home");
-            }
-
             return View();
         }
 
         [HttpPost]
-        [AllowAnonymous]
+        [Authorize(Roles = "Administrador")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Crear(Usuario usuario, IFormFile? avatar)
         {
-            if (!await PuedeAccederACrear())
-            {
-                return RedirectToAction("Restringido", "Home");
-            }
-
-            var esPrimerUsuario = !await _context.Usuarios.AnyAsync();
-
-            // Si es el primer usuario, forzamos el rol Administrador
-            if (esPrimerUsuario)
-            {
-                usuario.Rol = "Administrador";
-            }
-
-            // Si no es admin, el rol por defecto es Empleado
-            if (!EsAdmin() && usuario.Rol != "Administrador" && usuario.Rol != "Empleado")
-            {
-                usuario.Rol = "Empleado";
-            }
-
             if (!ModelState.IsValid)
             {
                 return View(usuario);
@@ -243,10 +208,9 @@ namespace mvc.Controllers
             // Guardamos el avatar si subieron uno
             usuario.Avatar = await GuardarAvatarAsync(avatar, null);
 
-            _context.Usuarios.Add(usuario);
-            await _context.SaveChangesAsync();
+            await _repo.Guardar(usuario);
 
-            return RedirectToAction("Login");
+            return RedirectToAction(nameof(Index));
         }
 
         // =====================================================
@@ -263,15 +227,7 @@ namespace mvc.Controllers
                 return RedirectToAction("Index");
             }
 
-            var usuario = await _context.Usuarios.FindAsync(id);
-            if (usuario == null)
-            {
-                return NotFound();
-            }
-
-            _context.Usuarios.Remove(usuario);
-            await _context.SaveChangesAsync();
-
+            await _repo.Eliminar(id);
             return RedirectToAction(nameof(Index));
         }
 
@@ -296,13 +252,6 @@ namespace mvc.Controllers
         private bool PuedeAccederAPerfil(int id)
         {
             return EsAdmin() || ObtenerIdUsuarioActual() == id;
-        }
-
-        // Verifica si se permite acceder a Crear (primer usuario o admin logueado)
-        private async Task<bool> PuedeAccederACrear()
-        {
-            var hayUsuarios = await _context.Usuarios.AnyAsync();
-            return !hayUsuarios || EsAdmin();
         }
 
         // Guarda el archivo de avatar en wwwroot/avatars
