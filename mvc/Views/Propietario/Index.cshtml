@@ -39,19 +39,22 @@
                         Editar
                     </a>
 
-                    <!-- Boton Eliminar -->
-                    <form asp-action="Delete"
-                          asp-route-id="@propietario.Id"
-                          method="post"
-                          style="display:inline">
+                    <!-- Boton Eliminar (solo Usuarios Administradores) -->
+                    @if (User.IsInRole("Administrador"))
+                    {
+                        <form asp-action="Delete"
+                              asp-route-id="@propietario.Id"
+                              method="post"
+                              style="display:inline">
 
-                        <button type="submit"
-                                class="btn btn-danger"
-                                onclick="return confirm('¿Está seguro de eliminar este propietario?')">
-                            Eliminar
-                        </button>
+                            <button type="submit"
+                                    class="btn btn-danger"
+                                    onclick="return confirm('¿Está seguro de eliminar este propietario?')">
+                                Eliminar
+                            </button>
 
-                    </form>
+                        </form>
+                    }
                 </td>
             </tr>
         }

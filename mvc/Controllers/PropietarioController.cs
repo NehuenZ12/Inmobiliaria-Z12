@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using mvc.Models;
@@ -117,7 +118,8 @@ namespace mvc.Controllers
             return View(propietario);
         }
 
-        // ELIMINAR PROPIETARIO
+        // ELIMINAR PROPIETARIO (solo Usuarios Administradores)
+        [Authorize(Roles = "Administrador")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)

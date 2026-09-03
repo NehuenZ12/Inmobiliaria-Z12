@@ -225,7 +225,7 @@ namespace mvc.Controllers
         }
 
         // =====================================================
-        // ELIMINAR USUARIO (solo administradores)
+        // ELIMINAR USUARIO (solo Usuarios Administradores)
         // =====================================================
         [Authorize(Roles = "Administrador")]
         [HttpPost]

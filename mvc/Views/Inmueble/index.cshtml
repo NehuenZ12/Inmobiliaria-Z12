@@ -44,18 +44,21 @@
                         Editar
                     </a>
 
-                    <form asp-action="Delete"
-                          asp-route-id="@inmueble.Id"
-                          method="post"
-                          style="display:inline">
+                    @if (User.IsInRole("Administrador"))
+                    {
+                        <form asp-action="Delete"
+                              asp-route-id="@inmueble.Id"
+                              method="post"
+                              style="display:inline">
 
-                        <button type="submit"
-                                class="btn btn-danger"
-                                onclick="return confirm('¿Está seguro de eliminar este inmueble?')">
-                            Eliminar
-                        </button>
+                            <button type="submit"
+                                    class="btn btn-danger"
+                                    onclick="return confirm('¿Está seguro de eliminar este inmueble?')">
+                                Eliminar
+                            </button>
 
-                    </form>
+                        </form>
+                    }
                 </td>
             </tr>
         }
