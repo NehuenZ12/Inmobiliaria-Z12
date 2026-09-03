@@ -1,0 +1,36 @@
+@model IEnumerable<mvc.Models.Reserva>
+
+<h1>Reservas</h1>
+
+<a asp-action="Create" class="btn btn-primary mb-3">
+  +
+</a>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Código</th>
+      <th>Inquilino</th>
+      <th>Inmueble</th>
+      <th>Desde</th>
+      <th>Hasta</th>
+      <th>Monto diario</th>
+      <th>Importe total</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    @foreach (var reserva in Model)
+    {
+      <tr>
+        <td>@reserva.Id</td>
+        <td>@reserva.NombreInquilino</td>
+        <td>@reserva.DireccionInmueble</td>
+        <td>@reserva.FechaDesde.ToShortDateString()</td>
+        <td>@reserva.FechaHasta.ToShortDateString()</td>
+        <td>@reserva.MontoDiario</td>
+        <td>@reserva.ImporteTotal</td>
+      </tr>
+    }
+  </tbody>
+</table>
