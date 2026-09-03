@@ -49,6 +49,37 @@ namespace mvc.Controllers
         }
 
         // =====================================================
+        // DETALLES DE UN PAGO (con auditoría)
+        // =====================================================
+        public async Task<IActionResult> Detalles(int id)
+        {
+            var pago = await _context.Pagos.FindAsync(id);
+
+            if (pago == null)
+            {
+                return NotFound();
+            }
+
+            // Cargamos nombres de usuarios para la auditoría
+            var idsUsuarios = new List<int> { pago.UsuarioCreadorId };
+            if (pago.UsuarioAnuladorId.HasValue)
+            {
+                idsUsuarios.Add(pago.UsuarioAnuladorId.Value);
+            }
+
+            var nombres = await _context.Usuarios
+                .Where(u => idsUsuarios.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => u.NombreCompleto);
+
+            pago.NombreUsuarioCreador = nombres.GetValueOrDefault(pago.UsuarioCreadorId);
+            pago.NombreUsuarioAnulador = pago.UsuarioAnuladorId.HasValue
+                ? nombres.GetValueOrDefault(pago.UsuarioAnuladorId.Value)
+                : null;
+
+            return View(pago);
+        }
+
+        // =====================================================
         // CREAR PAGO
         // =====================================================
         public IActionResult Crear(int reservaId)

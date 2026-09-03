@@ -38,6 +38,8 @@
                     }
                 </td>
                 <td>
+                    <a asp-action="Detalles" asp-route-id="@pago.Id" class="btn btn-info btn-sm">Detalles</a>
+
                     @if (!pago.Anulado)
                     {
                         <a asp-action="EditarConcepto" asp-route-id="@pago.Id" class="btn btn-primary btn-sm">Editar concepto</a>
