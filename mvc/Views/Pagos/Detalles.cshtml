@@ -1,0 +1,66 @@
+@model mvc.Models.Pago
+
+<h1>Detalles del pago</h1>
+
+<div class="mb-3">
+    <strong>Reserva:</strong> @Model.ReservaId
+</div>
+
+<div class="mb-3">
+    <strong>Fecha:</strong> @Model.Fecha.ToShortDateString()
+</div>
+
+<div class="mb-3">
+    <strong>Concepto:</strong> @Model.Concepto
+</div>
+
+<div class="mb-3">
+    <strong>Importe:</strong> @Model.Importe.ToString("C")
+</div>
+
+<div class="mb-3">
+    <strong>Método:</strong> @Model.Metodo
+</div>
+
+<div class="mb-3">
+    <strong>Estado:</strong> @Model.Estado
+</div>
+
+<div class="mb-3">
+    <strong>Anulado:</strong>
+    @if (Model.Anulado)
+    {
+        <span class="badge bg-secondary">Sí</span>
+    }
+    else
+    {
+        <span class="badge bg-success">No</span>
+    }
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ComprobanteUrl))
+{
+    <div class="mb-3">
+        <strong>Comprobante:</strong> <a href="@Model.ComprobanteUrl" target="_blank">@Model.ComprobanteUrl</a>
+    </div>
+}
+
+@if (User.IsInRole("Administrador"))
+{
+    <div class="card mt-4">
+        <div class="card-header">
+            Auditoría
+        </div>
+        <div class="card-body">
+            <p class="mb-1"><strong>Creado por:</strong> @Model.NombreUsuarioCreador</p>
+            @if (!string.IsNullOrEmpty(Model.NombreUsuarioAnulador))
+            {
+                <p class="mb-0"><strong>Anulado por:</strong> @Model.NombreUsuarioAnulador</p>
+            }
+        </div>
+    </div>
+}
+
+<div class="mt-4">
+    <a asp-action="Index" asp-route-idReserva="@Model.ReservaId" class="btn btn-secondary">Volver</a>
+</div>
