@@ -1,0 +1,55 @@
+@model mvc.Models.Reserva
+
+<h1>Nueva Reserva</h1>
+
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+<form asp-action="Create" method="post">
+
+  <div class="mb-3">
+    <label asp-for="InquilinoId" class="form-label">Inquilino</label>
+    <select asp-for="InquilinoId" class="form-control" asp-items="ViewBag.Inquilinos">
+      <option value="">-- Seleccione un inquilino --</option>
+    </select>
+    <span asp-validation-for="InquilinoId" class="text-danger"></span>
+  </div>
+
+  <div class="mb-3">
+    <label asp-for="InmuebleId" class="form-label">Inmueble</label>
+    <select asp-for="InmuebleId" class="form-control" asp-items="ViewBag.Inmuebles">
+      <option value="">-- Seleccione un inmueble --</option>
+    </select>
+    <span asp-validation-for="InmuebleId" class="text-danger"></span>
+  </div>
+
+  <div class="mb-3">
+    <label asp-for="FechaDesde" class="form-label">Fecha desde</label>
+    <input asp-for="FechaDesde" class="form-control" type="date" />
+    <span asp-validation-for="FechaDesde" class="text-danger"></span>
+  </div>
+
+  <div class="mb-3">
+    <label asp-for="FechaHasta" class="form-label">Fecha hasta</label>
+    <input asp-for="FechaHasta" class="form-control" type="date" />
+    <span asp-validation-for="FechaHasta" class="text-danger"></span>
+  </div>
+
+  <div class="mb-3">
+    <label asp-for="MontoDiario" class="form-label">Monto diario</label>
+    <input asp-for="MontoDiario" class="form-control" />
+    <span asp-validation-for="MontoDiario" class="text-danger"></span>
+  </div>
+
+  <button type="submit" class="btn btn-primary">
+    Guardar
+  </button>
+
+  <a asp-action="Index" class="btn btn-secondary">
+    Cancelar
+  </a>
+
+</form>
+
+@section Scripts {
+  <partial name="_ValidationScriptsPartial" />
+}
