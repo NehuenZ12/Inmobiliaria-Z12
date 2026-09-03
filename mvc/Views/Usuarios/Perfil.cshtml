@@ -1,0 +1,70 @@
+@model mvc.Models.Usuario
+
+<h1>Mi perfil</h1>
+
+<form asp-action="Perfil" method="post" enctype="multipart/form-data">
+    <input type="hidden" asp-for="Id" />
+
+    @if (!string.IsNullOrEmpty(Model.Avatar))
+    {
+        <div class="mb-3">
+            <img src="@Model.Avatar" alt="Avatar" class="rounded-circle" width="120" height="120" />
+        </div>
+    }
+
+    <div class="mb-3">
+        <label asp-for="Nombre" class="form-label">Nombre</label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Apellido" class="form-label">Apellido</label>
+        <input asp-for="Apellido" class="form-control" />
+        <span asp-validation-for="Apellido" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label">Email</label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Nueva clave (dejar en blanco para no cambiar)</label>
+        <input type="password" name="Clave" class="form-control" value="" />
+        <span asp-validation-for="Clave" class="text-danger"></span>
+    </div>
+
+    @if (User.IsInRole("Administrador"))
+    {
+        <div class="mb-3">
+            <label asp-for="Rol" class="form-label">Rol</label>
+            <select asp-for="Rol" class="form-select">
+                <option value="Administrador">Administrador</option>
+                <option value="Empleado">Empleado</option>
+            </select>
+            <span asp-validation-for="Rol" class="text-danger"></span>
+        </div>
+    }
+    else
+    {
+        <input type="hidden" asp-for="Rol" />
+        <div class="mb-3">
+            <label class="form-label">Rol</label>
+            <input class="form-control" value="@Model.Rol" disabled />
+        </div>
+    }
+
+    <div class="mb-3">
+        <label class="form-label">Avatar</label>
+        <input type="file" name="avatar" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a asp-controller="Propietario" asp-action="Index" class="btn btn-secondary">Volver</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

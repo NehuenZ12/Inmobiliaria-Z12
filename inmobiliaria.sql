@@ -187,7 +187,10 @@ CREATE TABLE public.pago (
     reserva_id integer NOT NULL,
     anulado boolean DEFAULT false NOT NULL,
     usuario_creador_id integer NOT NULL,
-    usuario_anulador_id integer
+    usuario_anulador_id integer,
+    metodo character varying(20) NOT NULL,
+    estado character varying(20) DEFAULT 'Pendiente'::character varying NOT NULL,
+    comprobante_url character varying(500)
 );
 
 
@@ -357,6 +360,20 @@ ALTER TABLE ONLY public.reserva
 
 ALTER TABLE ONLY public.pago
     ADD CONSTRAINT pago_pkey PRIMARY KEY (id);
+
+--
+-- Name: pago pago_metodo_check; Type: CHECK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pago
+    ADD CONSTRAINT pago_metodo_check CHECK (((metodo)::text = ANY ((ARRAY['Efectivo'::character varying, 'Transferencia'::character varying, 'Tarjeta'::character varying, 'MercadoPago'::character varying])::text[])));
+
+--
+-- Name: pago pago_estado_check; Type: CHECK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pago
+    ADD CONSTRAINT pago_estado_check CHECK (((estado)::text = ANY ((ARRAY['Pendiente'::character varying, 'Pagado'::character varying, 'Anulado'::character varying, 'Rechazado'::character varying])::text[])));
 
 
 --

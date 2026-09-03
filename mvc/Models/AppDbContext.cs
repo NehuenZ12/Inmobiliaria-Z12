@@ -13,6 +13,8 @@ namespace mvc.Models
 
         public DbSet<Inmueble> Inmuebles { get; set; }
 
+        public DbSet<Usuario> Usuarios { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Tabla Propietario
@@ -88,12 +90,49 @@ namespace mvc.Models
                 .Property(i => i.PropietarioId)
                 .HasColumnName("propietario_id");
 
-
             // Relacion: un propietario puede tener varios inmuebles
             modelBuilder.Entity<Inmueble>()
                 .HasOne(i => i.Propietario)
                 .WithMany()
                 .HasForeignKey(i => i.PropietarioId);
+
+
+            // USUARIO
+
+            modelBuilder.Entity<Usuario>().ToTable("usuario");
+
+            modelBuilder.Entity<Usuario>()
+                .Property(u => u.Id)
+                .HasColumnName("id_usuario");
+
+            modelBuilder.Entity<Usuario>()
+                .Property(u => u.Nombre)
+                .HasColumnName("nombre");
+
+            modelBuilder.Entity<Usuario>()
+                .Property(u => u.Apellido)
+                .HasColumnName("apellido");
+
+            modelBuilder.Entity<Usuario>()
+                .Property(u => u.Email)
+                .HasColumnName("email");
+
+            modelBuilder.Entity<Usuario>()
+                .Property(u => u.Clave)
+                .HasColumnName("clave");
+
+            modelBuilder.Entity<Usuario>()
+                .Property(u => u.Avatar)
+                .HasColumnName("avatar");
+
+            modelBuilder.Entity<Usuario>()
+                .Property(u => u.Rol)
+                .HasColumnName("rol");
+
+            // El email debe ser único (igual que en la base de datos)
+            modelBuilder.Entity<Usuario>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
         }
     }
 }

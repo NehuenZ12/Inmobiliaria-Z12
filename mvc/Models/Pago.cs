@@ -26,6 +26,16 @@ namespace mvc.Models
 
         public int? UsuarioAnuladorId { get; set; }
 
+        [Required(ErrorMessage = "El método de pago es obligatorio")]
+        public MetodoPago Metodo { get; set; }
+
+        [Required(ErrorMessage = "El estado del pago es obligatorio")]
+        public EstadoPago Estado { get; set; } = EstadoPago.Pendiente;
+
+        [StringLength(500, ErrorMessage = "La URL del comprobante no puede superar los 500 caracteres")]
+        [Url(ErrorMessage = "La URL del comprobante no es válida")]
+        public string? ComprobanteUrl { get; set; }
+
         // Auxiliares para mostrar auditoría en la vista de detalles
         public string? NombreUsuarioCreador { get; set; }
 
