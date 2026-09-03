@@ -151,7 +151,13 @@ ALTER SEQUENCE public.usuario_id_usuario_seq OWNED BY public.usuario.id_usuario;
 CREATE TABLE public.reserva (
     id integer NOT NULL,
     usuario_creador_id integer NOT NULL,
-    usuario_terminador_id integer
+    usuario_terminador_id integer,
+    inquilino_id integer NOT NULL,
+    inmueble_id integer NOT NULL,
+    fecha_desde date NOT NULL,
+    fecha_hasta date NOT NULL,
+    monto_diario numeric(10,2) NOT NULL,
+    fecha_terminacion date
 );
 
 
@@ -373,15 +379,10 @@ ALTER TABLE ONLY public.inmueble
 --
 
 ALTER TABLE ONLY public.reserva
-    ADD CONSTRAINT reserva_usuario_creador_id_fkey FOREIGN KEY (usuario_creador_id) REFERENCES public.usuario(id_usuario);
-
-
---
--- Name: reserva reserva_usuario_terminador_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
+    ADD CONSTRAINT reserva_inquilino_id_fkey FOREIGN KEY (inquilino_id) REFERENCES public.inquilino(id);
+    -- Name: reserva reserva_usuario_creador_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -git
 ALTER TABLE ONLY public.reserva
-    ADD CONSTRAINT reserva_usuario_terminador_id_fkey FOREIGN KEY (usuario_terminador_id) REFERENCES public.usuario(id_usuario);
+    ADD CONSTRAINT reserva_inmueble_id_fkey FOREIGN KEY (inmueble_id) REFERENCES public.inmueble(id);
 
 
 --
