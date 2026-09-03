@@ -106,6 +106,112 @@ ALTER SEQUENCE public.propietario_id_seq OWNED BY public.propietario.id;
 
 
 --
+-- Name: usuario; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.usuario (
+    id_usuario integer NOT NULL,
+    nombre character varying(100) NOT NULL,
+    apellido character varying(100) NOT NULL,
+    email character varying(150) NOT NULL,
+    clave character varying(255) NOT NULL,
+    avatar character varying(255),
+    rol character varying(20) NOT NULL,
+    CONSTRAINT usuario_rol_check CHECK (((rol)::text = ANY ((ARRAY['Administrador'::character varying, 'Empleado'::character varying])::text[])))
+);
+
+
+--
+-- Name: usuario_id_usuario_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.usuario_id_usuario_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: usuario_id_usuario_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.usuario_id_usuario_seq OWNED BY public.usuario.id_usuario;
+
+
+--
+-- Name: reserva; Type: TABLE; Schema: public; Owner: -
+--
+-- Estructura base con campos de auditoría.
+-- Las columnas de negocio adicionales las puede incorporar el módulo de reservas.
+--
+
+CREATE TABLE public.reserva (
+    id integer NOT NULL,
+    usuario_creador_id integer NOT NULL,
+    usuario_terminador_id integer
+);
+
+
+--
+-- Name: reserva_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.reserva_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: reserva_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.reserva_id_seq OWNED BY public.reserva.id;
+
+
+--
+-- Name: pago; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pago (
+    id integer NOT NULL,
+    fecha date NOT NULL,
+    concepto character varying(200) NOT NULL,
+    importe numeric(12,2) NOT NULL,
+    reserva_id integer NOT NULL,
+    anulado boolean DEFAULT false NOT NULL,
+    usuario_creador_id integer NOT NULL,
+    usuario_anulador_id integer
+);
+
+
+--
+-- Name: pago_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.pago_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pago_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.pago_id_seq OWNED BY public.pago.id;
+
+
+--
 -- TOC entry 4862 (class 2604 OID 16728)
 -- Name: inmueble id; Type: DEFAULT; Schema: public; Owner: -
 --
@@ -119,6 +225,27 @@ ALTER TABLE ONLY public.inmueble ALTER COLUMN id SET DEFAULT nextval('public.inm
 --
 
 ALTER TABLE ONLY public.propietario ALTER COLUMN id SET DEFAULT nextval('public.propietario_id_seq'::regclass);
+
+
+--
+-- Name: usuario id_usuario; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.usuario ALTER COLUMN id_usuario SET DEFAULT nextval('public.usuario_id_usuario_seq'::regclass);
+
+
+--
+-- Name: reserva id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reserva ALTER COLUMN id SET DEFAULT nextval('public.reserva_id_seq'::regclass);
+
+
+--
+-- Name: pago id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pago ALTER COLUMN id SET DEFAULT nextval('public.pago_id_seq'::regclass);
 
 
 --
@@ -162,6 +289,27 @@ SELECT pg_catalog.setval('public.propietario_id_seq', 4, true);
 
 
 --
+-- Name: usuario_id_usuario_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.usuario_id_usuario_seq', 1, false);
+
+
+--
+-- Name: reserva_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.reserva_id_seq', 1, false);
+
+
+--
+-- Name: pago_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.pago_id_seq', 1, false);
+
+
+--
 -- TOC entry 4867 (class 2606 OID 16739)
 -- Name: inmueble inmueble_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
@@ -180,12 +328,84 @@ ALTER TABLE ONLY public.propietario
 
 
 --
+-- Name: usuario usuario_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.usuario
+    ADD CONSTRAINT usuario_pkey PRIMARY KEY (id_usuario);
+
+
+--
+-- Name: usuario usuario_email_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.usuario
+    ADD CONSTRAINT usuario_email_key UNIQUE (email);
+
+
+--
+-- Name: reserva reserva_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reserva
+    ADD CONSTRAINT reserva_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pago pago_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pago
+    ADD CONSTRAINT pago_pkey PRIMARY KEY (id);
+
+
+--
 -- TOC entry 4868 (class 2606 OID 16740)
 -- Name: inmueble inmueble_propietario_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.inmueble
     ADD CONSTRAINT inmueble_propietario_id_fkey FOREIGN KEY (propietario_id) REFERENCES public.propietario(id);
+
+
+--
+-- Name: reserva reserva_usuario_creador_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reserva
+    ADD CONSTRAINT reserva_usuario_creador_id_fkey FOREIGN KEY (usuario_creador_id) REFERENCES public.usuario(id_usuario);
+
+
+--
+-- Name: reserva reserva_usuario_terminador_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reserva
+    ADD CONSTRAINT reserva_usuario_terminador_id_fkey FOREIGN KEY (usuario_terminador_id) REFERENCES public.usuario(id_usuario);
+
+
+--
+-- Name: pago pago_reserva_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pago
+    ADD CONSTRAINT pago_reserva_id_fkey FOREIGN KEY (reserva_id) REFERENCES public.reserva(id);
+
+
+--
+-- Name: pago pago_usuario_creador_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pago
+    ADD CONSTRAINT pago_usuario_creador_id_fkey FOREIGN KEY (usuario_creador_id) REFERENCES public.usuario(id_usuario);
+
+
+--
+-- Name: pago pago_usuario_anulador_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pago
+    ADD CONSTRAINT pago_usuario_anulador_id_fkey FOREIGN KEY (usuario_anulador_id) REFERENCES public.usuario(id_usuario);
 
 
 -- Completed on 2026-08-20 19:49:08
@@ -225,4 +445,3 @@ ALTER TABLE ONLY public.inquilino
 --
 
 \unrestrict QtSBGeRRY6j6Jwo1fkh8gtkMmOFbsIZaIOddumQrOTNweMS0szVWYyfIOxsVWS0
-
