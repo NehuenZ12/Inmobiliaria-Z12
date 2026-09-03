@@ -167,22 +167,24 @@ namespace mvc.Models
       modelBuilder.Entity<Reserva>()
           .Property(r => r.InmuebleId)
           .HasColumnName("inmueble_id");
-
-      modelBuilder.Entity<Reserva>()
-          .Property(r => r.FechaDesde)
-          .HasColumnName("fecha_desde");
-
-      modelBuilder.Entity<Reserva>()
-          .Property(r => r.FechaHasta)
-          .HasColumnName("fecha_hasta");
-
       modelBuilder.Entity<Reserva>()
           .Property(r => r.MontoDiario)
           .HasColumnName("monto_diario");
 
       modelBuilder.Entity<Reserva>()
+          .Property(r => r.FechaDesde)
+          .HasColumnName("fecha_desde")
+          .HasColumnType("date");
+
+      modelBuilder.Entity<Reserva>()
+          .Property(r => r.FechaHasta)
+          .HasColumnName("fecha_hasta")
+          .HasColumnType("date");
+
+      modelBuilder.Entity<Reserva>()
           .Property(r => r.FechaTerminacion)
-          .HasColumnName("fecha_terminacion");
+          .HasColumnName("fecha_terminacion")
+          .HasColumnType("date");
 
       modelBuilder.Entity<Reserva>()
           .Property(r => r.UsuarioCreadorId)

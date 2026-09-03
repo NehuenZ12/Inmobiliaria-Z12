@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace mvc.Models
 {
@@ -24,21 +25,24 @@ namespace mvc.Models
     [Range(0.01, double.MaxValue, ErrorMessage = "El monto diario debe ser mayor a cero")]
     public decimal MontoDiario { get; set; }
 
-    // Se completa solo si la reserva se termina antes de la fecha original
     [DataType(DataType.Date)]
     public DateTime? FechaTerminacion { get; set; }
 
     public int UsuarioCreadorId { get; set; }
     public int? UsuarioTerminadorId { get; set; }
 
-    // Auxiliares para mostrar auditoría en la vista de detalles
+    [NotMapped]
     public string? NombreUsuarioCreador { get; set; }
+
+    [NotMapped]
     public string? NombreUsuarioTerminador { get; set; }
-    // Auxiliares para mostrar el inquilino y el inmueble en los listados
+
+    [NotMapped]
     public string? NombreInquilino { get; set; }
+
+    [NotMapped]
     public string? DireccionInmueble { get; set; }
 
-    // Calculado: no se guarda en la base, se calcula solo a partir de las fechas y el monto
     public decimal ImporteTotal => (decimal)(FechaHasta - FechaDesde).TotalDays * MontoDiario;
   }
 }
