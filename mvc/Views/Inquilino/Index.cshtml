@@ -1,0 +1,53 @@
+@model IEnumerable<mvc.Models.Inquilino>
+
+<h1>Inquilinos</h1>
+
+<!-- Boton para crear un nuevo inquilino -->
+<a asp-action="Create" class="btn btn-primary mb-3">
+  +
+</a>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Código</th>
+      <th>Nombre</th>
+      <th>Apellido</th>
+      <th>DNI</th>
+      <th>Teléfono</th>
+      <th>Email</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    @foreach (var inquilino in Model)
+    {
+      <tr>
+        <td>@inquilino.Id</td>
+        <td>@inquilino.Nombre</td>
+        <td>@inquilino.Apellido</td>
+        <td>@inquilino.Dni</td>
+        <td>@inquilino.Telefono</td>
+        <td>@inquilino.Email</td>
+
+        <td>
+          <!-- Boton Editar -->
+          <a asp-action="Edit" asp-route-id="@inquilino.Id" class="btn btn-primary">
+            Editar
+          </a>
+
+          <!-- Boton Eliminar -->
+          <form asp-action="Delete" asp-route-id="@inquilino.Id" method="post" style="display:inline">
+
+            <button type="submit" class="btn btn-danger"
+                    onclick="return confirm('¿Está seguro de eliminar este inquilino?')">
+              Eliminar
+            </button>
+
+          </form>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>
