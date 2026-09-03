@@ -2,6 +2,16 @@
 
 <h1>Pagos de la reserva @ViewBag.ReservaId</h1>
 
+@if (TempData["Ok"] != null)
+{
+    <div class="alert alert-success">@TempData["Ok"]</div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
 <a asp-action="Crear" asp-route-reservaId="@ViewBag.ReservaId" class="btn btn-primary mb-3">
     Nuevo pago
 </a>

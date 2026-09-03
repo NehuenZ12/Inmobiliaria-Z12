@@ -124,6 +124,13 @@ namespace mvc.Controllers
                 return NotFound();
             }
 
+            // No se edita el concepto de un pago anulado
+            if (pago.Anulado)
+            {
+                TempData["Error"] = "No se puede editar el concepto de un pago anulado.";
+                return RedirectToAction(nameof(Index), new { idReserva = pago.ReservaId });
+            }
+
             var vm = new EditarConceptoPagoViewModel
             {
                 Id = pago.Id,
@@ -149,6 +156,14 @@ namespace mvc.Controllers
                 return NotFound();
             }
 
+            // No se edita el concepto de un pago anulado
+            if (pago.Anulado)
+            {
+                TempData["Error"] = "No se puede editar el concepto de un pago anulado.";
+                return RedirectToAction(nameof(Index), new { idReserva = pago.ReservaId });
+            }
+
+            // Solo se actualiza el concepto (importe y fecha quedan intactos)
             pago.Concepto = vm.Concepto;
             await _context.SaveChangesAsync();
 
@@ -169,10 +184,20 @@ namespace mvc.Controllers
                 return NotFound();
             }
 
+            // Si ya está anulado, no hacemos nada
+            if (pago.Anulado)
+            {
+                TempData["Error"] = "El pago ya estaba anulado.";
+                return RedirectToAction(nameof(Index), new { idReserva = reservaId });
+            }
+
+            // Baja lógica: no se borra el registro
             pago.Anulado = true;
+            pago.Estado = EstadoPago.Anulado;
             pago.UsuarioAnuladorId = ObtenerIdUsuarioActual();
             await _context.SaveChangesAsync();
 
+            TempData["Ok"] = "Pago anulado correctamente.";
             return RedirectToAction(nameof(Index), new { idReserva = reservaId });
         }
 

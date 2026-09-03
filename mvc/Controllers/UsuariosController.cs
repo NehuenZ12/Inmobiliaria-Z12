@@ -235,7 +235,8 @@ namespace mvc.Controllers
             // No permitimos que un admin se borre a sí mismo
             if (id == ObtenerIdUsuarioActual())
             {
-                return RedirectToAction("Index");
+                TempData["Error"] = "No podés eliminar tu propio usuario.";
+                return RedirectToAction(nameof(Index));
             }
 
             var usuario = await _context.Usuarios.FindAsync(id);
@@ -244,8 +245,29 @@ namespace mvc.Controllers
                 return NotFound();
             }
 
-            _context.Usuarios.Remove(usuario);
-            await _context.SaveChangesAsync();
+            // Si el usuario está referenciado en pagos o reservas, no lo borramos
+            var tienePagos = await _context.Pagos.AnyAsync(p =>
+                p.UsuarioCreadorId == id || p.UsuarioAnuladorId == id);
+
+            var tieneReservas = await _context.Reservas.AnyAsync(r =>
+                r.UsuarioCreadorId == id || r.UsuarioTerminadorId == id);
+
+            if (tienePagos || tieneReservas)
+            {
+                TempData["Error"] = "No se puede eliminar el usuario porque tiene pagos o reservas asociados.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                _context.Usuarios.Remove(usuario);
+                await _context.SaveChangesAsync();
+                TempData["Ok"] = "Usuario eliminado correctamente.";
+            }
+            catch (DbUpdateException)
+            {
+                TempData["Error"] = "No se pudo eliminar el usuario por restricciones de la base de datos.";
+            }
 
             return RedirectToAction(nameof(Index));
         }

@@ -31,6 +31,41 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+// Si no hay usuarios, creamos el primer administrador
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<Usuario>>();
+
+    if (!db.Usuarios.Any())
+    {
+        const string emailAdmin = "admin@admin.com";
+        const string claveAdmin = "admin123";
+
+        var admin = new Usuario
+        {
+            Nombre = "Admin",
+            Apellido = "Sistema",
+            Email = emailAdmin,
+            Rol = "Administrador"
+        };
+        admin.Clave = hasher.HashPassword(admin, claveAdmin);
+
+        db.Usuarios.Add(admin);
+        db.SaveChanges();
+
+        // Mostramos las credenciales en consola (solo desarrollo)
+        if (app.Environment.IsDevelopment())
+        {
+            Console.WriteLine("========================================");
+            Console.WriteLine("  Primer administrador creado");
+            Console.WriteLine($"  Email: {emailAdmin}");
+            Console.WriteLine($"  Clave: {claveAdmin}");
+            Console.WriteLine("========================================");
+        }
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
