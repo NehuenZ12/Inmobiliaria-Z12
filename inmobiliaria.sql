@@ -1,7 +1,9 @@
 --
--- PostgreSQL - Script de actualizacion completa
--- Alinea la base "inmobiliaria" con el diagrama de clases y la narrativa del proyecto.
+-- PostgreSQL - RESET COMPLETO de la base "inmobiliaria"
+-- Borra TODO lo que exista (sin importar el orden ni el estado actual)
+-- y recrea la estructura completa desde cero, con datos de ejemplo.
 --
+-- Roles de Usuario: 'Administrador' y 'Empleado'
 --
 
 SET statement_timeout = 0;
@@ -17,19 +19,40 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Limpieza previa de tablas que vamos a (re)crear desde cero
--- (no toca "propietario" ni "inmueble")
+-- 0) Borrado total, en cualquier orden, CASCADE se encarga de las dependencias
 --
 
 DROP TABLE IF EXISTS public.pago CASCADE;
 DROP TABLE IF EXISTS public.reserva CASCADE;
+DROP TABLE IF EXISTS public.imagen CASCADE;
 DROP TABLE IF EXISTS public.inquilino CASCADE;
 DROP TABLE IF EXISTS public.usuario CASCADE;
-DROP TABLE IF EXISTS public.imagen CASCADE;
+DROP TABLE IF EXISTS public.inmueble CASCADE;
 DROP TABLE IF EXISTS public.tipo CASCADE;
+DROP TABLE IF EXISTS public.propietario CASCADE;
 
 --
--- 1) Name: tipo; Type: TABLE
+-- 1) propietario
+--
+
+CREATE TABLE public.propietario (
+    id integer NOT NULL,
+    nombre character varying(100) NOT NULL,
+    apellido character varying(100) NOT NULL,
+    dni character varying(20) NOT NULL,
+    telefono character varying(30),
+    email character varying(150)
+);
+
+CREATE SEQUENCE public.propietario_id_seq
+    AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+
+ALTER SEQUENCE public.propietario_id_seq OWNED BY public.propietario.id;
+ALTER TABLE ONLY public.propietario ALTER COLUMN id SET DEFAULT nextval('public.propietario_id_seq'::regclass);
+ALTER TABLE ONLY public.propietario ADD CONSTRAINT propietario_pkey PRIMARY KEY (id);
+
+--
+-- 2) tipo
 --
 
 CREATE TABLE public.tipo (
@@ -39,50 +62,44 @@ CREATE TABLE public.tipo (
 );
 
 CREATE SEQUENCE public.tipo_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+    AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE public.tipo_id_seq OWNED BY public.tipo.id;
 ALTER TABLE ONLY public.tipo ALTER COLUMN id SET DEFAULT nextval('public.tipo_id_seq'::regclass);
 ALTER TABLE ONLY public.tipo ADD CONSTRAINT tipo_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.tipo ADD CONSTRAINT tipo_nombre_key UNIQUE (nombre);
 
--- Migramos los valores que ya existian como texto en inmueble.tipo,
--- normalizando mayusculas/minusculas (ej: "casa" y "Casa" quedan como "Casa")
-INSERT INTO public.tipo (nombre)
-SELECT DISTINCT INITCAP(TRIM(tipo))
-FROM public.inmueble
-ON CONFLICT (nombre) DO NOTHING;
-
-SELECT pg_catalog.setval('public.tipo_id_seq', GREATEST((SELECT MAX(id) FROM public.tipo), 1), true);
-
 --
--- 2) Migracion de "inmueble": agregar tipo_id (FK) y descripcion,
---    sin perder los datos existentes
+-- 3) inmueble (depende de propietario y tipo)
 --
 
-ALTER TABLE public.inmueble ADD COLUMN IF NOT EXISTS tipo_id integer;
-ALTER TABLE public.inmueble ADD COLUMN IF NOT EXISTS descripcion character varying(500);
+CREATE TABLE public.inmueble (
+    id integer NOT NULL,
+    direccion character varying(200) NOT NULL,
+    cupo integer NOT NULL,
+    latitud numeric(10,7),
+    longitud numeric(10,7),
+    precio_por_dia numeric(10,2) NOT NULL,
+    porcentaje_reserva numeric(5,2) NOT NULL,
+    disponible boolean DEFAULT true NOT NULL,
+    descripcion character varying(500),
+    propietario_id integer NOT NULL,
+    tipo_id integer NOT NULL
+);
 
-UPDATE public.inmueble i
-SET tipo_id = t.id
-FROM public.tipo t
-WHERE t.nombre = INITCAP(TRIM(i.tipo));
+CREATE SEQUENCE public.inmueble_id_seq
+    AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
-ALTER TABLE public.inmueble ALTER COLUMN tipo_id SET NOT NULL;
-ALTER TABLE public.inmueble
+ALTER SEQUENCE public.inmueble_id_seq OWNED BY public.inmueble.id;
+ALTER TABLE ONLY public.inmueble ALTER COLUMN id SET DEFAULT nextval('public.inmueble_id_seq'::regclass);
+ALTER TABLE ONLY public.inmueble ADD CONSTRAINT inmueble_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.inmueble
+    ADD CONSTRAINT inmueble_propietario_id_fkey FOREIGN KEY (propietario_id) REFERENCES public.propietario(id);
+ALTER TABLE ONLY public.inmueble
     ADD CONSTRAINT inmueble_tipo_id_fkey FOREIGN KEY (tipo_id) REFERENCES public.tipo(id);
 
--- La columna vieja de texto "tipo" ya quedo reemplazada por tipo_id.
--- Si preferis conservarla por las dudas, comenta la siguiente linea.
-ALTER TABLE public.inmueble DROP COLUMN tipo;
-
 --
--- 3) Name: imagen; Type: TABLE (depende de inmueble)
+-- 4) imagen (depende de inmueble)
 --
 
 CREATE TABLE public.imagen (
@@ -94,12 +111,7 @@ CREATE TABLE public.imagen (
 );
 
 CREATE SEQUENCE public.imagen_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+    AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE public.imagen_id_seq OWNED BY public.imagen.id;
 ALTER TABLE ONLY public.imagen ALTER COLUMN id SET DEFAULT nextval('public.imagen_id_seq'::regclass);
@@ -108,7 +120,7 @@ ALTER TABLE ONLY public.imagen
     ADD CONSTRAINT imagen_inmueble_id_fkey FOREIGN KEY (inmueble_id) REFERENCES public.inmueble(id);
 
 --
--- 4) Name: usuario; Type: TABLE
+-- 5) usuario
 --
 
 CREATE TABLE public.usuario (
@@ -125,12 +137,7 @@ CREATE TABLE public.usuario (
 );
 
 CREATE SEQUENCE public.usuario_id_usuario_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+    AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE public.usuario_id_usuario_seq OWNED BY public.usuario.id_usuario;
 ALTER TABLE ONLY public.usuario ALTER COLUMN id_usuario SET DEFAULT nextval('public.usuario_id_usuario_seq'::regclass);
@@ -138,7 +145,7 @@ ALTER TABLE ONLY public.usuario ADD CONSTRAINT usuario_pkey PRIMARY KEY (id_usua
 ALTER TABLE ONLY public.usuario ADD CONSTRAINT usuario_email_key UNIQUE (email);
 
 --
--- 5) Name: inquilino; Type: TABLE
+-- 6) inquilino
 --
 
 CREATE TABLE public.inquilino (
@@ -152,21 +159,14 @@ CREATE TABLE public.inquilino (
 );
 
 CREATE SEQUENCE public.inquilino_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+    AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE public.inquilino_id_seq OWNED BY public.inquilino.id;
 ALTER TABLE ONLY public.inquilino ALTER COLUMN id SET DEFAULT nextval('public.inquilino_id_seq'::regclass);
 ALTER TABLE ONLY public.inquilino ADD CONSTRAINT inquilino_pkey PRIMARY KEY (id);
 
 --
--- 6) Name: reserva; Type: TABLE (depende de usuario, inquilino, inmueble)
---    Version completa: incluye todos los campos de negocio que pide
---    la narrativa y el diagrama (antes solo tenia el "esqueleto" de auditoria)
+-- 7) reserva (depende de usuario, inquilino, inmueble)
 --
 
 CREATE TABLE public.reserva (
@@ -187,31 +187,22 @@ CREATE TABLE public.reserva (
 );
 
 CREATE SEQUENCE public.reserva_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+    AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE public.reserva_id_seq OWNED BY public.reserva.id;
 ALTER TABLE ONLY public.reserva ALTER COLUMN id SET DEFAULT nextval('public.reserva_id_seq'::regclass);
 ALTER TABLE ONLY public.reserva ADD CONSTRAINT reserva_pkey PRIMARY KEY (id);
-
 ALTER TABLE ONLY public.reserva
     ADD CONSTRAINT reserva_inquilino_id_fkey FOREIGN KEY (inquilino_id) REFERENCES public.inquilino(id);
-
 ALTER TABLE ONLY public.reserva
     ADD CONSTRAINT reserva_inmueble_id_fkey FOREIGN KEY (inmueble_id) REFERENCES public.inmueble(id);
-
 ALTER TABLE ONLY public.reserva
     ADD CONSTRAINT reserva_usuario_creador_id_fkey FOREIGN KEY (usuario_creador_id) REFERENCES public.usuario(id_usuario);
-
 ALTER TABLE ONLY public.reserva
     ADD CONSTRAINT reserva_usuario_terminador_id_fkey FOREIGN KEY (usuario_terminador_id) REFERENCES public.usuario(id_usuario);
 
 --
--- 7) Name: pago; Type: TABLE (depende de reserva, usuario)
+-- 8) pago (depende de reserva, usuario)
 --
 
 CREATE TABLE public.pago (
@@ -231,26 +222,52 @@ CREATE TABLE public.pago (
 );
 
 CREATE SEQUENCE public.pago_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+    AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE public.pago_id_seq OWNED BY public.pago.id;
 ALTER TABLE ONLY public.pago ALTER COLUMN id SET DEFAULT nextval('public.pago_id_seq'::regclass);
 ALTER TABLE ONLY public.pago ADD CONSTRAINT pago_pkey PRIMARY KEY (id);
-
 ALTER TABLE ONLY public.pago
     ADD CONSTRAINT pago_reserva_id_fkey FOREIGN KEY (reserva_id) REFERENCES public.reserva(id);
-
 ALTER TABLE ONLY public.pago
     ADD CONSTRAINT pago_usuario_creador_id_fkey FOREIGN KEY (usuario_creador_id) REFERENCES public.usuario(id_usuario);
-
 ALTER TABLE ONLY public.pago
     ADD CONSTRAINT pago_usuario_anulador_id_fkey FOREIGN KEY (usuario_anulador_id) REFERENCES public.usuario(id_usuario);
 
 --
--- Fin del script
+-- 9) Datos de ejemplo
 --
+
+-- INSERT INTO public.tipo (nombre) VALUES
+--    ('Casa'), ('Departamento'), ('Monoambiente'),
+--    ('Cabaña'), ('Local'), ('Oficina'), ('Terreno');
+
+-- INSERT INTO public.propietario (nombre, apellido, dni, telefono, email) VALUES
+--    ('Nehuen', 'Zerdá', '42999123', '2657799870', 'nehuen123@gmail.com'),
+--    ('Heber', 'Gomez', '40123321', '2664995566', 'hebergomez@gmail.com'),
+--    ('Jose', 'Garces', '39098123', '2664774455', 'josegarces@gmail.com');
+
+-- INSERT INTO public.inmueble (direccion, cupo, latitud, longitud, precio_por_dia, porcentaje_reserva, disponible, propietario_id, tipo_id) VALUES
+--    ('25 de mayo 950 San Luis', 2, 20.0000000, 15.0000000, 50.00, 50.00, true,
+--        (SELECT id FROM public.propietario WHERE dni = '42999123'),
+--        (SELECT id FROM public.tipo WHERE nombre = 'Casa')),
+--    ('Sarmiento 532 San Luis', 2, 10.0000000, 5.0000000, 25.00, 30.00, true,
+--        (SELECT id FROM public.propietario WHERE dni = '39098123'),
+--        (SELECT id FROM public.tipo WHERE nombre = 'Monoambiente')),
+--    ('Av centenario 245 San Luis', 3, 30.0000000, 20.0000000, 45.00, 50.00, true,
+--        (SELECT id FROM public.propietario WHERE dni = '40123321'),
+--        (SELECT id FROM public.tipo WHERE nombre = 'Casa'));
+
+-- Usuario administrador de ejemplo (clave en texto plano solo para pruebas
+-- de la base -- tu aplicacion deberia hashear la clave antes de insertarla)
+-- INSERT INTO public.usuario (nombre, apellido, email, clave, rol) VALUES
+--    ('Admin', 'Sistema', 'admin@inmobiliaria.com', 'cambiar_esta_clave', 'Administrador');
+
+--
+-- Verificacion final: deberia mostrar las 8 tablas creadas
+--
+
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
+ORDER BY table_name;
