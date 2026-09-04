@@ -14,21 +14,15 @@
 
 <body>
 
-  <!-- =====================================================
-         BARRA DE NAVEGACIÓN
-         ===================================================== -->
-
   <header>
     <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
 
       <div class="container-fluid">
 
-        <!-- Nombre del proyecto -->
         <a class="navbar-brand" asp-controller="Propietario" asp-action="Index">
           Inmobiliaria
         </a>
 
-        <!-- Botón para pantallas pequeñas -->
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
                 aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Mostrar navegación">
 
@@ -36,37 +30,67 @@
 
         </button>
 
-        <!-- Opciones de navegación -->
-        <div class="navbar-collapse collapse d-sm-inline-flex">
+        <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
 
           <ul class="navbar-nav">
 
-            <!-- Propietarios -->
             <li class="nav-item">
               <a class="nav-link text-dark" asp-controller="Propietario" asp-action="Index">
                 Propietarios
               </a>
             </li>
 
-            <!-- Inmuebles -->
             <li class="nav-item">
               <a class="nav-link text-dark" asp-controller="Inmueble" asp-action="Index">
                 Inmuebles
               </a>
             </li>
-            <!-- Inquilinos -->
+
             <li class="nav-item">
               <a class="nav-link text-dark" asp-controller="Inquilino" asp-action="Index">
                 Inquilinos
               </a>
             </li>
-            <!-- Reservas -->
+
             <li class="nav-item">
               <a class="nav-link text-dark" asp-controller="Reserva" asp-action="Index">
                 Reservas
               </a>
             </li>
 
+            @if (User.IsInRole("Administrador"))
+            {
+              <li class="nav-item">
+                <a class="nav-link text-dark" asp-controller="Usuarios" asp-action="Index">
+                  Usuarios
+                </a>
+              </li>
+            }
+
+          </ul>
+
+          <ul class="navbar-nav">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+              <li class="nav-item">
+                <a class="nav-link text-dark" asp-controller="Usuarios" asp-action="Perfil">
+                  @User.Identity.Name
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link text-dark" asp-controller="Usuarios" asp-action="Logout">
+                  Salir
+                </a>
+              </li>
+            }
+            else
+            {
+              <li class="nav-item">
+                <a class="nav-link text-dark" asp-controller="Usuarios" asp-action="Login">
+                  Ingresar
+                </a>
+              </li>
+            }
           </ul>
 
         </div>
@@ -77,10 +101,6 @@
   </header>
 
 
-  <!-- =====================================================
-         CONTENIDO DE LA PÁGINA
-         ===================================================== -->
-
   <div class="container">
 
     <main role="main" class="pb-3">
@@ -89,10 +109,6 @@
 
   </div>
 
-
-  <!-- =====================================================
-         PIE DE PÁGINA
-         ===================================================== -->
 
   <footer class="border-top footer text-muted">
 
@@ -103,7 +119,6 @@
   </footer>
 
 
-  <!-- Scripts -->
   <script src="~/lib/jquery/dist/jquery.min.js"></script>
   <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="~/js/site.js" asp-append-version="true"></script>

@@ -15,6 +15,7 @@ namespace mvc.Models
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Reserva> Reservas { get; set; }
     public DbSet<Pago> Pagos { get; set; }
+    public DbSet<TipoInmueble> TiposInmueble { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -91,6 +92,11 @@ namespace mvc.Models
           .Property(i => i.PropietarioId)
           .HasColumnName("propietario_id");
 
+      modelBuilder.Entity<Inmueble>()
+          .HasOne(i => i.Propietario)
+          .WithMany()
+          .HasForeignKey(i => i.PropietarioId);
+
       // INQUILINO
 
       modelBuilder.Entity<Inquilino>().ToTable("inquilino");
@@ -151,6 +157,10 @@ namespace mvc.Models
           .Property(u => u.Rol)
           .HasColumnName("rol");
 
+      modelBuilder.Entity<Usuario>()
+          .HasIndex(u => u.Email)
+          .IsUnique();
+
 
       // RESERVA
 
@@ -167,6 +177,7 @@ namespace mvc.Models
       modelBuilder.Entity<Reserva>()
           .Property(r => r.InmuebleId)
           .HasColumnName("inmueble_id");
+
       modelBuilder.Entity<Reserva>()
           .Property(r => r.MontoDiario)
           .HasColumnName("monto_diario");
@@ -195,6 +206,10 @@ namespace mvc.Models
           .HasColumnName("usuario_terminador_id");
 
       modelBuilder.Entity<Reserva>()
+          .Property(r => r.CantidadPersonas)
+          .HasColumnName("cantidad_personas");
+
+      modelBuilder.Entity<Reserva>()
           .HasOne<Usuario>()
           .WithMany()
           .HasForeignKey(r => r.UsuarioCreadorId);
@@ -213,9 +228,6 @@ namespace mvc.Models
           .HasOne<Inmueble>()
           .WithMany()
           .HasForeignKey(r => r.InmuebleId);
-      modelBuilder.Entity<Reserva>()
-          .Property(r => r.CantidadPersonas)
-          .HasColumnName("cantidad_personas");
 
       // PAGO
 
@@ -236,7 +248,8 @@ namespace mvc.Models
 
       modelBuilder.Entity<Pago>()
           .Property(p => p.Importe)
-          .HasColumnName("importe");
+          .HasColumnName("importe")
+          .HasPrecision(12, 2);
 
       modelBuilder.Entity<Pago>()
           .Property(p => p.ReservaId)
@@ -255,19 +268,34 @@ namespace mvc.Models
           .HasColumnName("usuario_anulador_id");
 
       modelBuilder.Entity<Pago>()
+          .Property(p => p.Metodo)
+          .HasColumnName("metodo")
+          .HasConversion<string>();
+
+      modelBuilder.Entity<Pago>()
+          .Property(p => p.Estado)
+          .HasColumnName("estado")
+          .HasConversion<string>();
+
+      modelBuilder.Entity<Pago>()
+          .Property(p => p.ComprobanteUrl)
+          .HasColumnName("comprobante_url");
+
+      modelBuilder.Entity<Pago>()
           .HasOne<Reserva>()
           .WithMany()
           .HasForeignKey(p => p.ReservaId);
+
       modelBuilder.Entity<Pago>()
-          .Property(p => p.Metodo)
-          .HasColumnName("metodo");
-
-
-      // Relacion: un propietario puede tener varios inmuebles
-      modelBuilder.Entity<Inmueble>()
-          .HasOne(i => i.Propietario)
+          .HasOne<Usuario>()
           .WithMany()
-          .HasForeignKey(i => i.PropietarioId);
+          .HasForeignKey(p => p.UsuarioCreadorId);
+
+      modelBuilder.Entity<Pago>()
+          .HasOne<Usuario>()
+          .WithMany()
+          .HasForeignKey(p => p.UsuarioAnuladorId)
+          .IsRequired(false);
     }
   }
 }

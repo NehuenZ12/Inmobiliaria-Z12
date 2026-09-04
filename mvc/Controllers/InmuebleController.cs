@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -98,8 +99,8 @@ namespace mvc.Controllers
         }
 
 
-        // ELIMINAR INMUEBLE
-
+        // ELIMINAR INMUEBLE (solo Usuarios Administradores)
+        [Authorize(Roles = "Administrador")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)

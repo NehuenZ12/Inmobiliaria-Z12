@@ -34,6 +34,34 @@ namespace mvc.Controllers
       return View(reservas);
     }
 
+    // DETALLES DE UNA RESERVA (con auditoria)
+    public async Task<IActionResult> Detalles(int id)
+    {
+      var reserva = await _context.Reservas.FindAsync(id);
+
+      if (reserva == null)
+      {
+        return NotFound();
+      }
+
+      var idsUsuarios = new List<int> { reserva.UsuarioCreadorId };
+      if (reserva.UsuarioTerminadorId.HasValue)
+      {
+        idsUsuarios.Add(reserva.UsuarioTerminadorId.Value);
+      }
+
+      var nombres = await _context.Usuarios
+          .Where(u => idsUsuarios.Contains(u.Id))
+          .ToDictionaryAsync(u => u.Id, u => u.NombreCompleto);
+
+      reserva.NombreUsuarioCreador = nombres.GetValueOrDefault(reserva.UsuarioCreadorId);
+      reserva.NombreUsuarioTerminador = reserva.UsuarioTerminadorId.HasValue
+          ? nombres.GetValueOrDefault(reserva.UsuarioTerminadorId.Value)
+          : null;
+
+      return View(reserva);
+    }
+
     // CREAR RESERVA
 
     public async Task<IActionResult> Create()
@@ -47,13 +75,11 @@ namespace mvc.Controllers
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Reserva reserva)
     {
-      // Validacion de fechas: la fecha hasta tiene que ser posterior a la fecha desde
       if (reserva.FechaHasta <= reserva.FechaDesde)
       {
         ModelState.AddModelError("FechaHasta", "La fecha hasta debe ser posterior a la fecha desde");
       }
 
-      // Verificar que el inmueble no este ocupado en esas fechas
       if (ModelState.IsValid && await InmuebleOcupado(reserva.InmuebleId, reserva.FechaDesde, reserva.FechaHasta, null))
       {
         ModelState.AddModelError("InmuebleId", "El inmueble ya esta reservado en esas fechas");
@@ -61,7 +87,6 @@ namespace mvc.Controllers
 
       if (ModelState.IsValid)
       {
-        // TODO: reemplazar por el usuario real cuando el equipo defina Usuario
         reserva.UsuarioCreadorId = 1;
 
         _context.Reservas.Add(reserva);
@@ -77,8 +102,6 @@ namespace mvc.Controllers
     }
 
 
-    // VERIFICAR SI UN INMUEBLE ESTA OCUPADO EN UN RANGO DE FECHAS
-    // reservaIdAExcluir se usa al editar, para no comparar la reserva contra si misma
     private async Task<bool> InmuebleOcupado(int inmuebleId, DateTime fechaDesde, DateTime fechaHasta, int? reservaIdAExcluir)
     {
       var query = _context.Reservas.Where(r =>
@@ -95,8 +118,6 @@ namespace mvc.Controllers
     }
 
 
-    // CARGAR INQUILINOS E INMUEBLES PARA LOS DESPLEGABLES
-
     private async Task CargarListas()
     {
       var inquilinos = await _context.Inquilinos
@@ -106,15 +127,10 @@ namespace mvc.Controllers
 
       ViewBag.Inquilinos = new SelectList(inquilinos, "Id", "Apellido");
 
-      /*       var inmuebles = await _context.Inmuebles
-                .OrderBy(i => i.Direccion)
-                .ToListAsync();
-
-            ViewBag.Inmuebles = new SelectList(inmuebles, "Id", "Direccion"); */
       var inmuebles = await _context.Inmuebles
-    .OrderBy(i => i.Direccion)
-    .Select(i => new { i.Id, i.Direccion })
-    .ToListAsync();
+          .OrderBy(i => i.Direccion)
+          .Select(i => new { i.Id, i.Direccion })
+          .ToListAsync();
 
       ViewBag.Inmuebles = new SelectList(inmuebles, "Id", "Direccion");
 
@@ -123,7 +139,6 @@ namespace mvc.Controllers
         new Usuario { Id = 1, Nombre = "Provisorio", Apellido = "Provisorio" }
       };
     }
-    // TERMINAR RESERVA (muestra el calculo de la multa antes de confirmar)
 
     public async Task<IActionResult> Terminar(int? id)
     {
@@ -135,7 +150,6 @@ namespace mvc.Controllers
 
       if (reserva.FechaTerminacion != null)
       {
-        // Ya fue terminada antes, no se puede terminar de nuevo
         return RedirectToAction(nameof(Index));
       }
 
@@ -147,7 +161,6 @@ namespace mvc.Controllers
       return View(reserva);
     }
 
-    // Confirma la terminacion: registra el pago de la multa y fija la fecha de terminacion
     [HttpPost, ActionName("Terminar")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> TerminarConfirmado(int id)
@@ -164,8 +177,6 @@ namespace mvc.Controllers
       var fechaTerminacion = DateTime.Today;
       var (multa, _) = CalcularMulta(reserva, fechaTerminacion);
 
-      // El pago de la multa se registra en el mismo momento de terminar:
-      // asi se cumple "no se puede terminar sin pagar la multa"
       var pago = new Pago
       {
         Fecha = fechaTerminacion,
@@ -173,22 +184,20 @@ namespace mvc.Controllers
         Importe = multa,
         ReservaId = reserva.Id,
         Anulado = false,
-        Metodo = "Efectivo",
+        Metodo = MetodoPago.Efectivo,
         UsuarioCreadorId = 1
       };
 
       _context.Pagos.Add(pago);
 
-      // Se guarda la fecha de terminacion aparte, sin tocar FechaHasta (la fecha original se conserva)
       reserva.FechaTerminacion = fechaTerminacion;
-      reserva.UsuarioTerminadorId = 1; // TODO: reemplazar por el usuario real
+      reserva.UsuarioTerminadorId = 1;
 
       await _context.SaveChangesAsync();
 
       return RedirectToAction(nameof(Index));
     }
 
-    // Calcula el porcentaje de multa (50% o 25%) y el monto en base a los dias que quedaban sin usar
     private (decimal multa, int porcentaje) CalcularMulta(Reserva reserva, DateTime fechaTerminacion)
     {
       double diasTotales = (reserva.FechaHasta - reserva.FechaDesde).TotalDays;

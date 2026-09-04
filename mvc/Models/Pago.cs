@@ -20,7 +20,14 @@ namespace mvc.Models
     public decimal Importe { get; set; }
 
     [Required(ErrorMessage = "El metodo de pago es obligatorio")]
-    public string Metodo { get; set; } = "";
+    public MetodoPago Metodo { get; set; }
+
+    [Required(ErrorMessage = "El estado del pago es obligatorio")]
+    public EstadoPago Estado { get; set; } = EstadoPago.Pendiente;
+
+    [StringLength(500, ErrorMessage = "La URL del comprobante no puede superar los 500 caracteres")]
+    [Url(ErrorMessage = "La URL del comprobante no es valida")]
+    public string? ComprobanteUrl { get; set; }
 
     [Required(ErrorMessage = "La reserva es obligatoria")]
     public int ReservaId { get; set; }
