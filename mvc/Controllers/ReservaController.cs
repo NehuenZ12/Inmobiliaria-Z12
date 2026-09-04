@@ -116,5 +116,85 @@ namespace mvc.Controllers
         new Usuario { Id = 1, Nombre = "Provisorio", Apellido = "Provisorio" }
       };
     }
+    // TERMINAR RESERVA (muestra el calculo de la multa antes de confirmar)
+
+    public async Task<IActionResult> Terminar(int? id)
+    {
+      if (id == null) return NotFound();
+
+      var reserva = await _context.Reservas.FindAsync(id);
+
+      if (reserva == null) return NotFound();
+
+      if (reserva.FechaTerminacion != null)
+      {
+        // Ya fue terminada antes, no se puede terminar de nuevo
+        return RedirectToAction(nameof(Index));
+      }
+
+      var (multa, porcentaje) = CalcularMulta(reserva, DateTime.Today);
+
+      ViewBag.Multa = multa;
+      ViewBag.Porcentaje = porcentaje;
+
+      return View(reserva);
+    }
+
+    // Confirma la terminacion: registra el pago de la multa y fija la fecha de terminacion
+    [HttpPost, ActionName("Terminar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> TerminarConfirmado(int id)
+    {
+      var reserva = await _context.Reservas.FindAsync(id);
+
+      if (reserva == null) return NotFound();
+
+      if (reserva.FechaTerminacion != null)
+      {
+        return RedirectToAction(nameof(Index));
+      }
+
+      var fechaTerminacion = DateTime.Today;
+      var (multa, _) = CalcularMulta(reserva, fechaTerminacion);
+
+      // El pago de la multa se registra en el mismo momento de terminar:
+      // asi se cumple "no se puede terminar sin pagar la multa"
+      var pago = new Pago
+      {
+        Fecha = fechaTerminacion,
+        Concepto = "Multa por terminacion anticipada de reserva",
+        Importe = multa,
+        ReservaId = reserva.Id,
+        Anulado = false,
+        UsuarioCreadorId = 1 // TODO: reemplazar por el usuario real cuando el equipo defina Usuario
+      };
+
+      _context.Pagos.Add(pago);
+
+      // Se guarda la fecha de terminacion aparte, sin tocar FechaHasta (la fecha original se conserva)
+      reserva.FechaTerminacion = fechaTerminacion;
+      reserva.UsuarioTerminadorId = 1; // TODO: reemplazar por el usuario real
+
+      await _context.SaveChangesAsync();
+
+      return RedirectToAction(nameof(Index));
+    }
+
+    // Calcula el porcentaje de multa (50% o 25%) y el monto en base a los dias que quedaban sin usar
+    private (decimal multa, int porcentaje) CalcularMulta(Reserva reserva, DateTime fechaTerminacion)
+    {
+      double diasTotales = (reserva.FechaHasta - reserva.FechaDesde).TotalDays;
+      DateTime mitadDelPeriodo = reserva.FechaDesde.AddDays(diasTotales / 2);
+
+      int porcentaje = fechaTerminacion < mitadDelPeriodo ? 50 : 25;
+
+      double diasRestantes = (reserva.FechaHasta - fechaTerminacion).TotalDays;
+      if (diasRestantes < 0) diasRestantes = 0;
+
+      decimal montoRestante = (decimal)diasRestantes * reserva.MontoDiario;
+      decimal multa = montoRestante * (porcentaje / 100m);
+
+      return (multa, porcentaje);
+    }
   }
 }

@@ -1,0 +1,29 @@
+@model mvc.Models.Reserva
+
+<h1>Terminar Reserva</h1>
+
+<dl class="row">
+  <dt class="col-sm-3">Fecha desde original</dt>
+  <dd class="col-sm-9">@Model.FechaDesde.ToShortDateString()</dd>
+
+  <dt class="col-sm-3">Fecha hasta original</dt>
+  <dd class="col-sm-9">@Model.FechaHasta.ToShortDateString()</dd>
+
+  <dt class="col-sm-3">Monto diario</dt>
+  <dd class="col-sm-9">@Model.MontoDiario</dd>
+</dl>
+
+<div class="alert alert-warning">
+  <p>Se cumplió <strong>@(ViewBag.Porcentaje == 50 ? "menos" : "más")</strong> de la mitad del tiempo original de
+    alquiler.</p>
+    <p>Porcentaje de multa a aplicar: <strong>@ViewBag.Porcentaje%</strong></p>
+    <p>Monto de la multa: <strong>@ViewBag.Multa</strong></p>
+  </div>
+
+  <form asp-action="Terminar" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">
+      Confirmar pago de multa y terminar reserva
+    </button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+  </form>

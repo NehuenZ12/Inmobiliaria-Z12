@@ -16,6 +16,8 @@
       <th>Hasta</th>
       <th>Monto diario</th>
       <th>Importe total</th>
+      <th>Estado</th>
+      <th>Acciones</th>
     </tr>
   </thead>
 
@@ -30,7 +32,24 @@
         <td>@reserva.FechaHasta.ToShortDateString()</td>
         <td>@reserva.MontoDiario</td>
         <td>@reserva.ImporteTotal</td>
+        <td>
+          @if (reserva.FechaTerminacion == null)
+          {
+            <span class="badge bg-success">Vigente</span>
+          }
+          else
+          {
+            <span class="badge bg-secondary">Terminada @reserva.FechaTerminacion.Value.ToShortDateString()</span>
+          }
+        </td>
+        <td>
+          @if (reserva.FechaTerminacion == null)
+          {
+            <a asp-action="Terminar" asp-route-id="@reserva.Id" class="btn btn-sm btn-outline-danger">Terminar</a>
+          }
+        </td>
       </tr>
     }
   </tbody>
+
 </table>

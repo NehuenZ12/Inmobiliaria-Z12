@@ -224,7 +224,8 @@ namespace mvc.Models
 
       modelBuilder.Entity<Pago>()
           .Property(p => p.Fecha)
-          .HasColumnName("fecha");
+          .HasColumnName("fecha")
+          .HasColumnType("date");
 
       modelBuilder.Entity<Pago>()
           .Property(p => p.Concepto)
