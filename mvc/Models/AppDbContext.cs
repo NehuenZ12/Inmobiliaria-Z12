@@ -19,6 +19,8 @@ namespace mvc.Models
 
         public DbSet<Pago> Pagos { get; set; }
 
+        public DbSet<TipoInmueble> TiposInmueble { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Tabla Propietario
