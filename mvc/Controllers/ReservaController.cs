@@ -15,16 +15,17 @@ namespace mvc.Controllers
     }
 
     // LISTAR RESERVAS
-
     public async Task<IActionResult> Index()
     {
       var reservas = await _context.Reservas.ToListAsync();
 
-      // Completamos los campos auxiliares para mostrar en la tabla
       foreach (var reserva in reservas)
       {
         var inquilino = await _context.Inquilinos.FindAsync(reserva.InquilinoId);
-        var inmueble = await _context.Inmuebles.FindAsync(reserva.InmuebleId);
+        var inmueble = await _context.Inmuebles
+            .Where(i => i.Id == reserva.InmuebleId)
+            .Select(i => new { i.Id, i.Direccion })
+            .FirstOrDefaultAsync();
 
         reserva.NombreInquilino = inquilino != null ? $"{inquilino.Nombre} {inquilino.Apellido}" : "-";
         reserva.DireccionInmueble = inmueble != null ? inmueble.Direccion : "-";
@@ -105,9 +106,15 @@ namespace mvc.Controllers
 
       ViewBag.Inquilinos = new SelectList(inquilinos, "Id", "Apellido");
 
+      /*       var inmuebles = await _context.Inmuebles
+                .OrderBy(i => i.Direccion)
+                .ToListAsync();
+
+            ViewBag.Inmuebles = new SelectList(inmuebles, "Id", "Direccion"); */
       var inmuebles = await _context.Inmuebles
-          .OrderBy(i => i.Direccion)
-          .ToListAsync();
+    .OrderBy(i => i.Direccion)
+    .Select(i => new { i.Id, i.Direccion })
+    .ToListAsync();
 
       ViewBag.Inmuebles = new SelectList(inmuebles, "Id", "Direccion");
 
