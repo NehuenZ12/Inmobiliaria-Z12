@@ -166,7 +166,8 @@ namespace mvc.Controllers
         Importe = multa,
         ReservaId = reserva.Id,
         Anulado = false,
-        UsuarioCreadorId = 1 // TODO: reemplazar por el usuario real cuando el equipo defina Usuario
+        Metodo = "Efectivo",
+        UsuarioCreadorId = 1
       };
 
       _context.Pagos.Add(pago);
