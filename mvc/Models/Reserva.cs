@@ -24,6 +24,9 @@ namespace mvc.Models
     [Required(ErrorMessage = "El monto diario es obligatorio")]
     [Range(0.01, double.MaxValue, ErrorMessage = "El monto diario debe ser mayor a cero")]
     public decimal MontoDiario { get; set; }
+    [Required(ErrorMessage = "La cantidad de personas es obligatoria")]
+    [Range(1, int.MaxValue, ErrorMessage = "Debe ser al menos 1 persona")]
+    public int CantidadPersonas { get; set; }
 
     [DataType(DataType.Date)]
     public DateTime? FechaTerminacion { get; set; }

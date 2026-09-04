@@ -19,6 +19,9 @@ namespace mvc.Models
     [Range(0.01, double.MaxValue, ErrorMessage = "El importe debe ser mayor a cero")]
     public decimal Importe { get; set; }
 
+    [Required(ErrorMessage = "El metodo de pago es obligatorio")]
+    public string Metodo { get; set; } = "";
+
     [Required(ErrorMessage = "La reserva es obligatoria")]
     public int ReservaId { get; set; }
 

@@ -213,6 +213,9 @@ namespace mvc.Models
           .HasOne<Inmueble>()
           .WithMany()
           .HasForeignKey(r => r.InmuebleId);
+      modelBuilder.Entity<Reserva>()
+          .Property(r => r.CantidadPersonas)
+          .HasColumnName("cantidad_personas");
 
       // PAGO
 
@@ -255,6 +258,9 @@ namespace mvc.Models
           .HasOne<Reserva>()
           .WithMany()
           .HasForeignKey(p => p.ReservaId);
+      modelBuilder.Entity<Pago>()
+          .Property(p => p.Metodo)
+          .HasColumnName("metodo");
 
 
       // Relacion: un propietario puede tener varios inmuebles
