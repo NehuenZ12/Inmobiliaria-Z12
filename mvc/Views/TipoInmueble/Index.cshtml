@@ -1,0 +1,48 @@
+@model IEnumerable<mvc.Models.TipoInmueble>
+
+<h1>Tipos de Inmueble</h1>
+
+<a asp-action="Create" class="btn btn-primary mb-3">
+    +
+</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var tipo in Model)
+        {
+            <tr>
+                <td>@tipo.Id</td>
+                <td>@tipo.Nombre</td>
+
+                <td>
+                    <a asp-action="Edit"
+                       asp-route-id="@tipo.Id"
+                       class="btn btn-primary">
+                        Editar
+                    </a>
+
+                    <form asp-action="Delete"
+                          asp-route-id="@tipo.Id"
+                          method="post"
+                          style="display:inline">
+
+                        <button type="submit"
+                                class="btn btn-danger"
+                                onclick="return confirm('¿Está seguro de eliminar este tipo de inmueble?')">
+                            Eliminar
+                        </button>
+
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
