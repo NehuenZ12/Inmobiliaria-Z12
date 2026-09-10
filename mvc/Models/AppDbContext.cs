@@ -65,10 +65,6 @@ namespace mvc.Models
           .HasColumnName("cupo");
 
       modelBuilder.Entity<Inmueble>()
-          .Property(i => i.Tipo)
-          .HasColumnName("tipo");
-
-      modelBuilder.Entity<Inmueble>()
           .Property(i => i.Latitud)
           .HasColumnName("latitud");
 
@@ -89,13 +85,46 @@ namespace mvc.Models
           .HasColumnName("disponible");
 
       modelBuilder.Entity<Inmueble>()
+          .Property(i => i.Descripcion)
+          .HasColumnName("descripcion");
+
+      modelBuilder.Entity<Inmueble>()
           .Property(i => i.PropietarioId)
           .HasColumnName("propietario_id");
+
+      modelBuilder.Entity<Inmueble>()
+          .Property(i => i.TipoId)
+          .HasColumnName("tipo_id");
 
       modelBuilder.Entity<Inmueble>()
           .HasOne(i => i.Propietario)
           .WithMany()
           .HasForeignKey(i => i.PropietarioId);
+
+      modelBuilder.Entity<Inmueble>()
+          .HasOne(i => i.TipoInmueble)
+          .WithMany()
+          .HasForeignKey(i => i.TipoId);
+
+      // TIPO DE INMUEBLE
+
+      modelBuilder.Entity<TipoInmueble>().ToTable("tipo");
+
+      modelBuilder.Entity<TipoInmueble>()
+          .Property(t => t.Id)
+          .HasColumnName("id");
+
+      modelBuilder.Entity<TipoInmueble>()
+          .Property(t => t.Nombre)
+          .HasColumnName("nombre");
+
+      modelBuilder.Entity<TipoInmueble>()
+          .Property(t => t.Descripcion)
+          .HasColumnName("descripcion");
+
+      modelBuilder.Entity<TipoInmueble>()
+          .HasIndex(t => t.Nombre)
+          .IsUnique();
 
       // INQUILINO
 

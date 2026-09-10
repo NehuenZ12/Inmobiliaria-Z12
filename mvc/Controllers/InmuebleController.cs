@@ -21,6 +21,7 @@ namespace mvc.Controllers
         {
             var inmuebles = await _context.Inmuebles
                 .Include(i => i.Propietario)
+                .Include(i => i.TipoInmueble)
                 .ToListAsync();
 
             return View(inmuebles);
@@ -30,7 +31,7 @@ namespace mvc.Controllers
 
         public async Task<IActionResult> Create()
         {
-            await CargarPropietarios();
+            await CargarListas();
 
             return View();
         }
@@ -48,7 +49,7 @@ namespace mvc.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            await CargarPropietarios();
+            await CargarListas();
 
             return View(inmueble);
         }
@@ -70,7 +71,7 @@ namespace mvc.Controllers
                 return NotFound();
             }
 
-            await CargarPropietarios();
+            await CargarListas();
 
             return View(inmueble);
         }
@@ -93,7 +94,7 @@ namespace mvc.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            await CargarPropietarios();
+            await CargarListas();
 
             return View(inmueble);
         }
@@ -120,9 +121,7 @@ namespace mvc.Controllers
         }
 
 
-        // CARGAR PROPIETARIOS
-
-        private async Task CargarPropietarios()
+        private async Task CargarListas()
         {
             var propietarios = await _context.Propietarios
                 .OrderBy(p => p.Apellido)
@@ -133,6 +132,16 @@ namespace mvc.Controllers
                 propietarios,
                 "Id",
                 "Apellido"
+            );
+
+            var tipos = await _context.TiposInmueble
+                .OrderBy(t => t.Nombre)
+                .ToListAsync();
+
+            ViewBag.Tipos = new SelectList(
+                tipos,
+                "Id",
+                "Nombre"
             );
         }
     }

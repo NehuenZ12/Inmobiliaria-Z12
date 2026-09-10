@@ -12,9 +12,6 @@ namespace mvc.Models
         [Range(1, int.MaxValue, ErrorMessage = "El cupo debe ser mayor a 0")]
         public int Cupo { get; set; }
 
-        [Required(ErrorMessage = "El tipo es obligatorio")]
-        public string Tipo { get; set; } = "";
-
         [Range(-90, 90, ErrorMessage = "La latitud debe estar entre -90 y 90")]
         public decimal? Latitud { get; set; }
 
@@ -29,11 +26,17 @@ namespace mvc.Models
 
         public bool Disponible { get; set; } = true;
 
-        // Clave foranea
+        [StringLength(500)]
+        public string? Descripcion { get; set; }
+
         [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un propietario")]
         public int PropietarioId { get; set; }
 
-        // Propietario asociado al inmueble
         public Propietario? Propietario { get; set; }
+
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un tipo")]
+        public int TipoId { get; set; }
+
+        public TipoInmueble? TipoInmueble { get; set; }
     }
 }

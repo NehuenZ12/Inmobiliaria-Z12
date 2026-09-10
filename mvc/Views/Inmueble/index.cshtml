@@ -27,14 +27,15 @@
                 <td>@inmueble.Id</td>
                 <td>@inmueble.Direccion</td>
                 <td>@inmueble.Cupo</td>
-                <td>@inmueble.Tipo</td>
+                <td>@(inmueble.TipoInmueble?.Nombre ?? "-")</td>
                 <td>@inmueble.PrecioPorDia</td>
                 <td>
                     @(inmueble.Disponible ? "Sí" : "No")
                 </td>
                 <td>
-                    @inmueble.Propietario.Nombre
-                    @inmueble.Propietario.Apellido
+                    @(inmueble.Propietario != null
+                        ? $"{inmueble.Propietario.Nombre} {inmueble.Propietario.Apellido}"
+                        : "-")
                 </td>
 
                 <td>
