@@ -19,9 +19,19 @@
     </div>
 
     <div class="mb-3">
-        <label asp-for="Tipo" class="form-label">Tipo</label>
-        <input asp-for="Tipo" class="form-control" />
-        <span asp-validation-for="Tipo" class="text-danger"></span>
+        <label asp-for="TipoId" class="form-label">Tipo</label>
+        <select asp-for="TipoId"
+                asp-items="ViewBag.Tipos"
+                class="form-select">
+            <option value="">-- Seleccione un tipo --</option>
+        </select>
+        <span asp-validation-for="TipoId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Descripcion" class="form-label">Descripción</label>
+        <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Descripcion" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
