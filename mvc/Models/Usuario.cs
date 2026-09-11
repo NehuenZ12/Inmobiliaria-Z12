@@ -34,6 +34,12 @@ namespace mvc.Models
         [RegularExpression(@"^(Administrador|Empleado)$", ErrorMessage = "El rol debe ser Administrador o Empleado")]
         public string Rol { get; set; } = "Empleado";
 
+        // los usuarios nuevos arrancan activos, igual que el default de la tabla
+        public bool Activo { get; set; } = true;
+
+        // la carga la base con now() al insertar
+        public DateTime FechaAlta { get; set; }
+
         [NotMapped]
         public string NombreCompleto => $"{Nombre} {Apellido}".Trim();
     }

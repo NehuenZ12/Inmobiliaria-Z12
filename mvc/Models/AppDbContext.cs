@@ -148,6 +148,12 @@ namespace mvc.Models
           .Property(i => i.Email)
           .HasColumnName("email");
 
+      modelBuilder.Entity<Inquilino>()
+          .Property(i => i.FechaAlta)
+          .HasColumnName("fecha_alta")
+          .HasDefaultValueSql("now()")
+          .ValueGeneratedOnAdd();
+
       // USUARIO
 
       modelBuilder.Entity<Usuario>().ToTable("usuario");
@@ -179,6 +185,16 @@ namespace mvc.Models
       modelBuilder.Entity<Usuario>()
           .Property(u => u.Rol)
           .HasColumnName("rol");
+
+      modelBuilder.Entity<Usuario>()
+          .Property(u => u.Activo)
+          .HasColumnName("activo");
+
+      modelBuilder.Entity<Usuario>()
+          .Property(u => u.FechaAlta)
+          .HasColumnName("fecha_alta")
+          .HasDefaultValueSql("now()")
+          .ValueGeneratedOnAdd();
 
       modelBuilder.Entity<Usuario>()
           .HasIndex(u => u.Email)
