@@ -29,6 +29,11 @@ namespace mvc.Models
     [Range(1, int.MaxValue, ErrorMessage = "Debe ser al menos 1 persona")]
     public int CantidadPersonas { get; set; }
 
+    public EstadoReserva Estado { get; set; }
+
+    // la carga la base con now() al insertar
+    public DateTime FechaCreacion { get; set; }
+
     [DataType(DataType.Date)]
     public DateTime? FechaTerminacion { get; set; }
 
