@@ -279,10 +279,6 @@ namespace mvc.Models
           .HasColumnName("reserva_id");
 
       modelBuilder.Entity<Pago>()
-          .Property(p => p.Anulado)
-          .HasColumnName("anulado");
-
-      modelBuilder.Entity<Pago>()
           .Property(p => p.UsuarioCreadorId)
           .HasColumnName("usuario_creador_id");
 

@@ -32,8 +32,6 @@ namespace mvc.Models
     [Required(ErrorMessage = "La reserva es obligatoria")]
     public int ReservaId { get; set; }
 
-    public bool Anulado { get; set; }
-
     public int UsuarioCreadorId { get; set; }
     public int? UsuarioAnuladorId { get; set; }
 

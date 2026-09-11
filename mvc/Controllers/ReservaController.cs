@@ -1,10 +1,13 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Security.Claims;
 using mvc.Models;
 
 namespace mvc.Controllers
 {
+  [Authorize]
   public class ReservaController : Controller
   {
     private readonly AppDbContext _context;
@@ -87,7 +90,7 @@ namespace mvc.Controllers
 
       if (ModelState.IsValid)
       {
-        reserva.UsuarioCreadorId = 1;
+        reserva.UsuarioCreadorId = ObtenerIdUsuarioActual();
 
         _context.Reservas.Add(reserva);
 
@@ -133,11 +136,6 @@ namespace mvc.Controllers
           .ToListAsync();
 
       ViewBag.Inmuebles = new SelectList(inmuebles, "Id", "Direccion");
-
-      ViewBag.Usuarios = new List<Usuario>
-      {
-        new Usuario { Id = 1, Nombre = "Provisorio", Apellido = "Provisorio" }
-      };
     }
 
     public async Task<IActionResult> Terminar(int? id)
@@ -176,6 +174,7 @@ namespace mvc.Controllers
 
       var fechaTerminacion = DateTime.Today;
       var (multa, _) = CalcularMulta(reserva, fechaTerminacion);
+      var usuarioActual = ObtenerIdUsuarioActual();
 
       var pago = new Pago
       {
@@ -183,15 +182,14 @@ namespace mvc.Controllers
         Concepto = "Multa por terminacion anticipada de reserva",
         Importe = multa,
         ReservaId = reserva.Id,
-        Anulado = false,
         Metodo = MetodoPago.Efectivo,
-        UsuarioCreadorId = 1
+        UsuarioCreadorId = usuarioActual
       };
 
       _context.Pagos.Add(pago);
 
       reserva.FechaTerminacion = fechaTerminacion;
-      reserva.UsuarioTerminadorId = 1;
+      reserva.UsuarioTerminadorId = usuarioActual;
 
       await _context.SaveChangesAsync();
 
@@ -212,6 +210,15 @@ namespace mvc.Controllers
       decimal multa = montoRestante * (porcentaje / 100m);
 
       return (multa, porcentaje);
+    }
+
+    // AUXILIAR
+
+    // Devuelve el ID del usuario logueado
+    private int ObtenerIdUsuarioActual()
+    {
+      var idClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      return int.TryParse(idClaim, out int id) ? id : 0;
     }
   }
 }
