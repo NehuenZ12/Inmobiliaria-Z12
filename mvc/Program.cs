@@ -2,6 +2,8 @@ using mvc.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -75,6 +77,17 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Cultura es-AR para que los importes salgan como $ 200,00
+var culturaAr = new CultureInfo("es-AR");
+
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(culturaAr),
+    SupportedCultures = new List<CultureInfo> { culturaAr },
+    SupportedUICultures = new List<CultureInfo> { culturaAr }
+});
+
 app.UseRouting();
 
 // Middlewares de autenticación y autorización en el orden correcto
