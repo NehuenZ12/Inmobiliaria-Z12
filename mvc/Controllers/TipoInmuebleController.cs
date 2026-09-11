@@ -94,9 +94,16 @@ namespace mvc.Controllers
                 return NotFound();
             }
 
-            _context.TiposInmueble.Remove(tipo);
-
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.TiposInmueble.Remove(tipo);
+                await _context.SaveChangesAsync();
+                TempData["Ok"] = "Tipo de inmueble eliminado correctamente.";
+            }
+            catch (DbUpdateException)
+            {
+                TempData["Error"] = "No se puede eliminar el tipo porque tiene inmuebles asociados.";
+            }
 
             return RedirectToAction(nameof(Index));
         }
