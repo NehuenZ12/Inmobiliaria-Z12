@@ -18,7 +18,7 @@ A continuación se presenta el esquema del modelo de datos correspondiente a la 
 
 ### Diagrama Entidad-Relación (DER) / Diagrama de Clases
 
-![Diagrama del proyecto Entidad-Relación (DER) ](./Diagrama.jpeg)
+![Diagrama del proyecto Entidad-Relación (DER) ](./Diagrama2.png)
 
 
 El proyecto utiliza PostgreSQL.
@@ -50,7 +50,7 @@ CREATE DATABASE inmobiliaria;
 
 5_ Ejecutar todo el script.
 
-6_ El script crea las tablas propietario e inmueble, crea la clave foránea entre ellas y carga datos iniciales de prueba.
+6_ El script crea las 8 tablas del modelo (propietario, tipo, inmueble, imagen, usuario, inquilino, reserva y pago), crea las claves foraneas entre ellas y carga datos iniciales de prueba.
 
 7_ Verificar que las tablas aparezcan dentro de:
 
