@@ -3,64 +3,58 @@
 <h1>Inmuebles</h1>
 
 <a asp-action="Create" class="btn btn-primary mb-3">
-    +
+  +
 </a>
 
 <table class="table">
-    <thead>
-        <tr>
-            <th>Código</th>
-            <th>Dirección</th>
-            <th>Cupo</th>
-            <th>Tipo</th>
-            <th>Precio por día</th>
-            <th>Disponible</th>
-            <th>Propietario</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
+  <thead>
+    <tr>
+      <th>Código</th>
+      <th>Dirección</th>
+      <th>Cupo</th>
+      <th>Tipo</th>
+      <th>Precio por día</th>
+      <th>Disponible</th>
+      <th>Propietario</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
 
-    <tbody>
-        @foreach (var inmueble in Model)
-        {
-            <tr>
-                <td>@inmueble.Id</td>
-                <td>@inmueble.Direccion</td>
-                <td>@inmueble.Cupo</td>
-                <td>@inmueble.Tipo</td>
-                <td>@inmueble.PrecioPorDia</td>
-                <td>
-                    @(inmueble.Disponible ? "Sí" : "No")
-                </td>
-                <td>
-                    @inmueble.Propietario.Nombre
-                    @inmueble.Propietario.Apellido
-                </td>
+  <tbody>
+    @foreach (var inmueble in Model)
+    {
+      <tr>
+        <td>@inmueble.Id</td>
+        <td>@inmueble.Direccion</td>
+        <td>@inmueble.Cupo</td>
+        <td>@inmueble.TipoInmueble?.Nombre</td>
+        <td>@inmueble.PrecioPorDia</td>
+        <td>
+          @(inmueble.Disponible ? "Sí" : "No")
+        </td>
+        <td>
+          @inmueble.Propietario.Nombre
+          @inmueble.Propietario.Apellido
+        </td>
 
-                <td>
-                    <a asp-action="Edit"
-                       asp-route-id="@inmueble.Id"
-                       class="btn btn-primary">
-                        Editar
-                    </a>
+        <td>
+          <a asp-action="Edit" asp-route-id="@inmueble.Id" class="btn btn-primary">
+            Editar
+          </a>
 
-                    @if (User.IsInRole("Administrador"))
-                    {
-                        <form asp-action="Delete"
-                              asp-route-id="@inmueble.Id"
-                              method="post"
-                              style="display:inline">
+          @if (User.IsInRole("Administrador"))
+          {
+            <form asp-action="Delete" asp-route-id="@inmueble.Id" method="post" style="display:inline">
 
-                            <button type="submit"
-                                    class="btn btn-danger"
-                                    onclick="return confirm('¿Está seguro de eliminar este inmueble?')">
-                                Eliminar
-                            </button>
+              <button type="submit" class="btn btn-danger"
+                      onclick="return confirm('¿Está seguro de eliminar este inmueble?')">
+                Eliminar
+              </button>
 
-                        </form>
-                    }
-                </td>
-            </tr>
-        }
-    </tbody>
+            </form>
+          }
+        </td>
+      </tr>
+    }
+  </tbody>
 </table>

@@ -4,83 +4,82 @@
 
 <form asp-action="Edit" method="post">
 
-    <input type="hidden" asp-for="Id" />
+  <input type="hidden" asp-for="Id" />
 
-    <div class="mb-3">
-        <label asp-for="Direccion" class="form-label">Dirección</label>
-        <input asp-for="Direccion" class="form-control" />
-    </div>
+  <div class="mb-3">
+    <label asp-for="Direccion" class="form-label">Dirección</label>
+    <input asp-for="Direccion" class="form-control" />
+  </div>
 
-    <div class="mb-3">
-        <label asp-for="Cupo" class="form-label">Cupo</label>
-        <input asp-for="Cupo" type="number" class="form-control" />
-    </div>
+  <div class="mb-3">
+    <label asp-for="Cupo" class="form-label">Cupo</label>
+    <input asp-for="Cupo" type="number" class="form-control" />
+  </div>
 
-    <div class="mb-3">
-        <label asp-for="Tipo" class="form-label">Tipo</label>
-        <input asp-for="Tipo" class="form-control" />
-    </div>
+  <div class="mb-3">
+    <label asp-for="TipoId" class="form-label">
+      Tipo
+    </label>
 
-    <div class="mb-3">
-        <label asp-for="Latitud" class="form-label">Latitud</label>
-        <input asp-for="Latitud" class="form-control" />
-    </div>
+    <select asp-for="TipoId" asp-items="ViewBag.Tipos" class="form-select">
 
-    <div class="mb-3">
-        <label asp-for="Longitud" class="form-label">Longitud</label>
-        <input asp-for="Longitud" class="form-control" />
-    </div>
+      <option value="">-- Seleccione un tipo --</option>
 
-    <div class="mb-3">
-        <label asp-for="PrecioPorDia" class="form-label">
-            Precio por día
-        </label>
+    </select>
+  </div>
 
-        <input asp-for="PrecioPorDia"
-               type="number"
-               step="0.01"
-               class="form-control" />
-    </div>
+  <div class="mb-3">
+    <label asp-for="Latitud" class="form-label">Latitud</label>
+    <input asp-for="Latitud" class="form-control" />
+  </div>
 
-    <div class="mb-3">
-        <label asp-for="PorcentajeReserva" class="form-label">
-            Porcentaje de reserva
-        </label>
+  <div class="mb-3">
+    <label asp-for="Longitud" class="form-label">Longitud</label>
+    <input asp-for="Longitud" class="form-control" />
+  </div>
 
-        <input asp-for="PorcentajeReserva"
-               type="number"
-               step="0.01"
-               class="form-control" />
-    </div>
+  <div class="mb-3">
+    <label asp-for="PrecioPorDia" class="form-label">
+      Precio por día
+    </label>
 
-    <div class="mb-3">
-        <label asp-for="PropietarioId" class="form-label">
-            Propietario
-        </label>
+    <input asp-for="PrecioPorDia" type="number" step="0.01" class="form-control" />
+  </div>
 
-        <select asp-for="PropietarioId"
-                asp-items="ViewBag.Propietarios"
-                class="form-select">
+  <div class="mb-3">
+    <label asp-for="PorcentajeReserva" class="form-label">
+      Porcentaje de reserva
+    </label>
 
-            <option value="">-- Seleccione un propietario --</option>
+    <input asp-for="PorcentajeReserva" type="number" step="0.01" class="form-control" />
+  </div>
 
-        </select>
-    </div>
+  <div class="mb-3">
+    <label asp-for="PropietarioId" class="form-label">
+      Propietario
+    </label>
 
-    <div class="mb-3">
-        <label asp-for="Disponible" class="form-label">
-            Disponible
-        </label>
+    <select asp-for="PropietarioId" asp-items="ViewBag.Propietarios" class="form-select">
 
-        <input asp-for="Disponible" type="checkbox" />
-    </div>
+      <option value="">-- Seleccione un propietario --</option>
 
-    <button type="submit" class="btn btn-primary">
-        Guardar cambios
-    </button>
+    </select>
+  </div>
 
-    <a asp-action="Index" class="btn btn-secondary">
-        Cancelar
-    </a>
+  <div class="mb-3">
+    <label asp-for="Disponible" class="form-label">
+      Disponible
+    </label>
+
+    <input asp-for="Disponible" type="checkbox" />
+  </div>
+
+  <button type="submit" class="btn btn-primary">
+    Guardar cambios
+  </button>
+
+  <a asp-action="Index" class="btn btn-secondary">
+    Cancelar
+  </a>
 
 </form>
