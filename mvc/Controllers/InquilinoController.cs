@@ -80,7 +80,19 @@ namespace mvc.Controllers
 
       if (ModelState.IsValid)
       {
-        _context.Update(inquilino);
+        // traemos el original para no pisar fecha_alta, que la maneja la base
+        var actual = await _context.Inquilinos.FindAsync(id);
+
+        if (actual == null)
+        {
+          return NotFound();
+        }
+
+        actual.Nombre = inquilino.Nombre;
+        actual.Apellido = inquilino.Apellido;
+        actual.Dni = inquilino.Dni;
+        actual.Telefono = inquilino.Telefono;
+        actual.Email = inquilino.Email;
 
         await _context.SaveChangesAsync();
 
