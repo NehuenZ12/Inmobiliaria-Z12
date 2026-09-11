@@ -103,9 +103,16 @@ namespace mvc.Controllers
         return NotFound();
       }
 
-      _context.Inquilinos.Remove(inquilino);
-
-      await _context.SaveChangesAsync();
+      try
+      {
+        _context.Inquilinos.Remove(inquilino);
+        await _context.SaveChangesAsync();
+        TempData["Ok"] = "Inquilino eliminado correctamente.";
+      }
+      catch (DbUpdateException)
+      {
+        TempData["Error"] = "No se puede eliminar el inquilino porque tiene reservas asociadas.";
+      }
 
       return RedirectToAction(nameof(Index));
     }

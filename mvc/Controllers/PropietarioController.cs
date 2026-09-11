@@ -131,9 +131,16 @@ namespace mvc.Controllers
                 return NotFound();
             }
 
-            _context.Propietarios.Remove(propietario);
-
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Propietarios.Remove(propietario);
+                await _context.SaveChangesAsync();
+                TempData["Ok"] = "Propietario eliminado correctamente.";
+            }
+            catch (DbUpdateException)
+            {
+                TempData["Error"] = "No se puede eliminar el propietario porque tiene inmuebles asociados.";
+            }
 
             return RedirectToAction(nameof(Index));
         }
