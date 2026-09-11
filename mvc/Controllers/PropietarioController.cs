@@ -108,7 +108,19 @@ namespace mvc.Controllers
 
             if (ModelState.IsValid)
             {
-                _context.Update(propietario);
+                // traemos el original y copiamos solo los campos del form
+                var actual = await _context.Propietarios.FindAsync(id);
+
+                if (actual == null)
+                {
+                    return NotFound();
+                }
+
+                actual.Nombre = propietario.Nombre;
+                actual.Apellido = propietario.Apellido;
+                actual.Dni = propietario.Dni;
+                actual.Telefono = propietario.Telefono;
+                actual.Email = propietario.Email;
 
                 await _context.SaveChangesAsync();
 

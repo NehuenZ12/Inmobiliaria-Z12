@@ -72,7 +72,16 @@ namespace mvc.Controllers
 
             if (ModelState.IsValid)
             {
-                _context.TiposInmueble.Update(tipoInmueble);
+                // traemos el original y copiamos solo los campos del form
+                var actual = await _context.TiposInmueble.FindAsync(id);
+
+                if (actual == null)
+                {
+                    return NotFound();
+                }
+
+                actual.Nombre = tipoInmueble.Nombre;
+                actual.Descripcion = tipoInmueble.Descripcion;
 
                 await _context.SaveChangesAsync();
 
