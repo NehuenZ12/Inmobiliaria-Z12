@@ -5,6 +5,10 @@
 --
 -- Roles de Usuario: 'Administrador' y 'Empleado'
 --
+-- v2 (11/09/2026): se elimina la columna pago.anulado (bool), que quedaba
+-- duplicada con pago.estado (enum). "Anulado" pasa a ser Estado = 'Anulado'
+-- como unica fuente de verdad. Todo lo demas queda igual que la v1.
+--
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -211,7 +215,6 @@ CREATE TABLE public.pago (
     concepto character varying(200) NOT NULL,
     importe numeric(12,2) NOT NULL,
     reserva_id integer NOT NULL,
-    anulado boolean DEFAULT false NOT NULL,
     usuario_creador_id integer NOT NULL,
     usuario_anulador_id integer,
     metodo character varying(20) NOT NULL,
