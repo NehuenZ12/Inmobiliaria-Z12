@@ -90,7 +90,23 @@ namespace mvc.Controllers
 
       if (ModelState.IsValid)
       {
-        _context.Inmuebles.Update(inmueble);
+        // traemos el original y copiamos solo los campos del form
+        var actual = await _context.Inmuebles.FindAsync(id);
+
+        if (actual == null)
+        {
+          return NotFound();
+        }
+
+        actual.Direccion = inmueble.Direccion;
+        actual.Cupo = inmueble.Cupo;
+        actual.Latitud = inmueble.Latitud;
+        actual.Longitud = inmueble.Longitud;
+        actual.PrecioPorDia = inmueble.PrecioPorDia;
+        actual.PorcentajeReserva = inmueble.PorcentajeReserva;
+        actual.Disponible = inmueble.Disponible;
+        actual.PropietarioId = inmueble.PropietarioId;
+        actual.TipoId = inmueble.TipoId;
 
         await _context.SaveChangesAsync();
 
