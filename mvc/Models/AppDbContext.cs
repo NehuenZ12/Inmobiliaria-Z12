@@ -233,6 +233,17 @@ namespace mvc.Models
           .HasColumnName("cantidad_personas");
 
       modelBuilder.Entity<Reserva>()
+          .Property(r => r.Estado)
+          .HasColumnName("estado")
+          .HasConversion<string>();
+
+      modelBuilder.Entity<Reserva>()
+          .Property(r => r.FechaCreacion)
+          .HasColumnName("fecha_creacion")
+          .HasDefaultValueSql("now()")
+          .ValueGeneratedOnAdd();
+
+      modelBuilder.Entity<Reserva>()
           .HasOne<Usuario>()
           .WithMany()
           .HasForeignKey(r => r.UsuarioCreadorId);
