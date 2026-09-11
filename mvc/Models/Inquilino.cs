@@ -26,5 +26,8 @@ namespace mvc.Models
     [EmailAddress(ErrorMessage = "El email no tiene un formato valido")]
     [StringLength(150)]
     public string? Email { get; set; }
+
+    // la carga la base con now() al insertar
+    public DateTime FechaAlta { get; set; }
   }
 }
