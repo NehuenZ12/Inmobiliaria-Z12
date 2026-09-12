@@ -365,6 +365,86 @@ namespace mvc.Controllers
 
       return (multa, porcentaje);
     }
+    // Presenta el formulario para renovar una reserva existente
+    public async Task<IActionResult> Renovar(int? id)
+    {
+      if (id == null) return NotFound();
+
+      var original = await _context.Reservas.FindAsync(id);
+
+      if (original == null) return NotFound();
+
+      if (original.Estado != EstadoReserva.Confirmada)
+      {
+        return RedirectToAction(nameof(Index));
+      }
+
+      var nueva = new Reserva
+      {
+        InquilinoId = original.InquilinoId,
+        InmuebleId = original.InmuebleId,
+        FechaDesde = original.FechaHasta,
+        MontoDiario = original.MontoDiario,
+        CantidadPersonas = original.CantidadPersonas
+      };
+
+      ViewBag.ReservaOriginalId = original.Id;
+
+      return View(nueva);
+    }
+    // Procesa la renovación de una reserva existente, validando fechas y disponibilidad
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Renovar(int reservaOriginalId, Reserva reserva)
+    {
+      var original = await _context.Reservas.FindAsync(reservaOriginalId);
+
+      if (original == null) return NotFound();
+
+      if (original.Estado != EstadoReserva.Confirmada)
+      {
+        return RedirectToAction(nameof(Index));
+      }
+
+      if (reserva.FechaHasta <= reserva.FechaDesde)
+      {
+        ModelState.AddModelError("FechaHasta", "La fecha hasta debe ser posterior a la fecha desde");
+      }
+
+      if (reserva.FechaDesde < original.FechaHasta)
+      {
+        ModelState.AddModelError("FechaDesde", "La nueva reserva no puede empezar antes de que termine la original");
+      }
+
+      if (ModelState.IsValid && await InmuebleOcupado(original.InmuebleId, reserva.FechaDesde, reserva.FechaHasta, null))
+      {
+        ModelState.AddModelError("FechaHasta", "El inmueble ya esta reservado en esas fechas");
+      }
+
+      if (!ModelState.IsValid)
+      {
+        ViewBag.ReservaOriginalId = reservaOriginalId;
+        return View(reserva);
+      }
+
+      var nueva = new Reserva
+      {
+        InquilinoId = original.InquilinoId,
+        InmuebleId = original.InmuebleId,
+        FechaDesde = reserva.FechaDesde,
+        FechaHasta = reserva.FechaHasta,
+        MontoDiario = reserva.MontoDiario,
+        CantidadPersonas = reserva.CantidadPersonas,
+        Estado = EstadoReserva.Confirmada,
+        UsuarioCreadorId = ObtenerIdUsuarioActual()
+      };
+
+      _context.Reservas.Add(nueva);
+      await _context.SaveChangesAsync();
+
+      return RedirectToAction(nameof(Index));
+    }
+
 
     // Sección auxiliar del controlador.
 
