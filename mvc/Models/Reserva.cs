@@ -58,5 +58,6 @@ namespace mvc.Models
     public string? DireccionInmueble { get; set; }
 
     public decimal ImporteTotal => (decimal)(FechaHasta - FechaDesde).TotalDays * MontoDiario;
+
   }
 }
