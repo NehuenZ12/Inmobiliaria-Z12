@@ -2,15 +2,37 @@
 
 <h1>Detalles de la reserva</h1>
 
-<div class="mb-3">
-  <strong>Código:</strong> @Model.Id
-</div>
+<dl class="row">
+  <dt class="col-sm-3">Codigo</dt>
+  <dd class="col-sm-9">@Model.Id</dd>
+
+  <dt class="col-sm-3">Inquilino</dt>
+  <dd class="col-sm-9">@Model.NombreInquilino</dd>
+
+  <dt class="col-sm-3">Inmueble</dt>
+  <dd class="col-sm-9">@Model.DireccionInmueble</dd>
+
+  <dt class="col-sm-3">Fecha desde</dt>
+  <dd class="col-sm-9">@Model.FechaDesde.ToShortDateString()</dd>
+
+  <dt class="col-sm-3">Fecha hasta</dt>
+  <dd class="col-sm-9">@Model.FechaHasta.ToShortDateString()</dd>
+
+  <dt class="col-sm-3">Monto diario</dt>
+  <dd class="col-sm-9">@Model.MontoDiario</dd>
+
+  <dt class="col-sm-3">Importe total</dt>
+  <dd class="col-sm-9">@Model.ImporteTotal</dd>
+
+  <dt class="col-sm-3">Estado</dt>
+  <dd class="col-sm-9">@Model.EstadoMostrado</dd>
+</dl>
 
 @if (User.IsInRole("Administrador"))
 {
   <div class="card mt-4">
     <div class="card-header">
-      Auditoría
+      Auditoria
     </div>
     <div class="card-body">
       <p class="mb-1"><strong>Creado por:</strong> @Model.NombreUsuarioCreador</p>
