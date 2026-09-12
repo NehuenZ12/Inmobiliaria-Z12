@@ -6,7 +6,6 @@ namespace mvc.Models
   public class Reserva
   {
     public int Id { get; set; }
-
     [Required(ErrorMessage = "Debe seleccionar un inquilino")]
     public int InquilinoId { get; set; }
 
@@ -42,6 +41,12 @@ namespace mvc.Models
 
     [NotMapped]
     public string? NombreUsuarioCreador { get; set; }
+
+    [NotMapped]
+    public string EstadoMostrado =>
+    Estado == EstadoReserva.Confirmada && FechaHasta.Date < DateTime.Today
+        ? "Completada"
+        : Estado.ToString();
 
     [NotMapped]
     public string? NombreUsuarioTerminador { get; set; }
