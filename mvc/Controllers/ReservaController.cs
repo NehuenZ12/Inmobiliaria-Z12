@@ -121,6 +121,7 @@ namespace mvc.Controllers
     {
       var query = _context.Reservas.Where(r =>
           r.InmuebleId == inmuebleId &&
+          r.Estado != EstadoReserva.Cancelada &&
           r.FechaDesde < fechaHasta &&
           r.FechaHasta > fechaDesde);
 
@@ -130,6 +131,42 @@ namespace mvc.Controllers
       }
 
       return await query.AnyAsync();
+    }
+    // Informe: dado un rango de fechas, lista los inmuebles disponibles
+    // (Disponible == true) que no tienen ninguna reserva activa solapada.
+    public async Task<IActionResult> InmueblesLibres(DateTime? desde, DateTime? hasta)
+    {
+      if (desde == null || hasta == null)
+      {
+        return View(new List<Inmueble>());
+      }
+
+      var fechaDesde = desde.Value.Date;
+      var fechaHasta = hasta.Value.Date;
+
+      if (fechaHasta <= fechaDesde)
+      {
+        ViewBag.Error = "La fecha hasta debe ser posterior a la fecha desde";
+        return View(new List<Inmueble>());
+      }
+
+      var libres = await _context.Inmuebles
+          .Include(im => im.TipoInmueble)
+          .Include(im => im.Propietario)
+          .Where(im =>
+              im.Disponible &&
+              !_context.Reservas.Any(r =>
+                  r.InmuebleId == im.Id &&
+                  r.Estado != EstadoReserva.Cancelada &&
+                  r.FechaDesde < fechaHasta &&
+                  r.FechaHasta > fechaDesde))
+          .OrderBy(im => im.Direccion)
+          .ToListAsync();
+
+      ViewBag.Desde = fechaDesde;
+      ViewBag.Hasta = fechaHasta;
+
+      return View(libres);
     }
 
 
