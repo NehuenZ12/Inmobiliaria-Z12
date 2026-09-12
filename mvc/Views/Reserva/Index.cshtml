@@ -55,8 +55,11 @@
           }
         </td>
         <td>
+          <a asp-action="Detalles" asp-route-id="@reserva.Id" class="btn btn-sm btn-outline-secondary">Detalles</a>
+
           @if (reserva.Estado == EstadoReserva.Pendiente)
           {
+
             <a asp-action="CheckIn" asp-route-id="@reserva.Id" class="btn btn-sm btn-outline-success">Check-in</a>
           }
           @if (reserva.Estado == EstadoReserva.Confirmada)

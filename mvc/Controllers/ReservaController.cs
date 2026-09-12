@@ -22,25 +22,59 @@ namespace mvc.Controllers
       _context = context;
     }
 
-    // Muestra el listado principal de reservas con datos derivados como
-    // nombre del inquilino y dirección del inmueble para facilitar la visualización.
-    public async Task<IActionResult> Index()
+    // Constante que define el tamaño de pagina para la paginación de reservas
+
+    private const int TamanioPagina = 3;
+
+    public async Task<IActionResult> Index(int pagina = 1)
     {
-      var reservas = await _context.Reservas.ToListAsync();
+      if (pagina < 1) pagina = 1;
 
-      foreach (var reserva in reservas)
+      var query =
+          from r in _context.Reservas
+          join i in _context.Inquilinos on r.InquilinoId equals i.Id
+          join im in _context.Inmuebles on r.InmuebleId equals im.Id
+          orderby r.Id
+          select new
+          {
+            Reserva = r,
+            NombreInquilino = i.Nombre + " " + i.Apellido,
+            DireccionInmueble = im.Direccion
+          };
+
+      var totalReservas = await query.CountAsync();
+      var totalPaginas = (int)Math.Ceiling(totalReservas / (double)TamanioPagina);
+
+      var datos = await query
+          .Skip((pagina - 1) * TamanioPagina)
+          .Take(TamanioPagina)
+          .ToListAsync();
+
+      var reservas = datos.Select(d =>
       {
-        var inquilino = await _context.Inquilinos.FindAsync(reserva.InquilinoId);
-        var inmueble = await _context.Inmuebles
-            .Where(i => i.Id == reserva.InmuebleId)
-            .Select(i => new { i.Id, i.Direccion })
-            .FirstOrDefaultAsync();
+        d.Reserva.NombreInquilino = d.NombreInquilino;
+        d.Reserva.DireccionInmueble = d.DireccionInmueble;
+        return d.Reserva;
+      }).ToList();
 
-        reserva.NombreInquilino = inquilino != null ? $"{inquilino.Nombre} {inquilino.Apellido}" : "-";
-        reserva.DireccionInmueble = inmueble != null ? inmueble.Direccion : "-";
-      }
+      ViewBag.PaginaActual = pagina;
+      ViewBag.TotalPaginas = totalPaginas;
 
       return View(reservas);
+    }
+    // Recupera los nombres del inquilino y del inmueble asociados a una reserva
+    // Completa NombreInquilino y DireccionInmueble de una reserva
+    // para mostrarlos en las vistas sin duplicar la consulta en cada accion.
+    private async Task CargarNombresDeReserva(Reserva reserva)
+    {
+      var inquilino = await _context.Inquilinos.FindAsync(reserva.InquilinoId);
+      var inmueble = await _context.Inmuebles
+          .Where(i => i.Id == reserva.InmuebleId)
+          .Select(i => new { i.Id, i.Direccion })
+          .FirstOrDefaultAsync();
+
+      reserva.NombreInquilino = inquilino != null ? $"{inquilino.Nombre} {inquilino.Apellido}" : "-";
+      reserva.DireccionInmueble = inmueble != null ? inmueble.Direccion : "-";
     }
 
     // Recupera una reserva específica y complementa su vista con los nombres
@@ -54,7 +88,10 @@ namespace mvc.Controllers
         return NotFound();
       }
 
+      await CargarNombresDeReserva(reserva);
+
       var idsUsuarios = new List<int> { reserva.UsuarioCreadorId };
+
       if (reserva.UsuarioTerminadorId.HasValue)
       {
         idsUsuarios.Add(reserva.UsuarioTerminadorId.Value);
@@ -285,6 +322,8 @@ namespace mvc.Controllers
       {
         return RedirectToAction(nameof(Index));
       }
+
+      await CargarNombresDeReserva(reserva);
 
       return View(reserva);
     }
