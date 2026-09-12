@@ -1,0 +1,25 @@
+@model mvc.Models.Reserva
+
+<h1>Check-in</h1>
+
+<dl class="row">
+  <dt class="col-sm-3">Inquilino</dt>
+  <dd class="col-sm-9">@Model.NombreInquilino</dd>
+
+  <dt class="col-sm-3">Inmueble</dt>
+  <dd class="col-sm-9">@Model.DireccionInmueble</dd>
+
+  <dt class="col-sm-3">Fecha desde</dt>
+  <dd class="col-sm-9">@Model.FechaDesde.ToShortDateString()</dd>
+
+  <dt class="col-sm-3">Fecha hasta</dt>
+  <dd class="col-sm-9">@Model.FechaHasta.ToShortDateString()</dd>
+</dl>
+
+<form asp-action="CheckIn" method="post">
+  <input type="hidden" asp-for="Id" />
+  <button type="submit" class="btn btn-success">
+    Confirmar check-in
+  </button>
+  <a asp-action="Index" class="btn btn-secondary">Volver</a>
+</form>

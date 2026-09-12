@@ -9,7 +9,7 @@
 <table class="table">
   <thead>
     <tr>
-      <th>Código</th>
+      <th>Codigo</th>
       <th>Inquilino</th>
       <th>Inmueble</th>
       <th>Desde</th>
@@ -33,19 +33,35 @@
         <td>@reserva.MontoDiario</td>
         <td>@reserva.ImporteTotal</td>
         <td>
-          @if (reserva.FechaTerminacion == null)
+          @switch (reserva.EstadoMostrado)
           {
-            <span class="badge bg-success">Vigente</span>
-          }
-          else
-          {
-            <span class="badge bg-secondary">Terminada @reserva.FechaTerminacion.Value.ToShortDateString()</span>
+            case "Pendiente":
+              <span class="badge bg-warning text-dark">Pendiente</span>
+              break;
+            case "Confirmada":
+              <span class="badge bg-success">Vigente</span>
+              break;
+            case "Completada":
+              <span class="badge bg-primary">Completada</span>
+              break;
+            case "Cancelada":
+              <span class="badge bg-secondary">Cancelada</span>
+              break;
           }
         </td>
         <td>
-          @if (reserva.FechaTerminacion == null)
+          @if (reserva.Estado == EstadoReserva.Pendiente)
           {
-            <a asp-action="Terminar" asp-route-id="@reserva.Id" class="btn btn-sm btn-outline-danger">Terminar</a>
+            <a asp-action="CheckIn" asp-route-id="@reserva.Id" class="btn btn-sm btn-outline-success">Check-in</a>
+          }
+          @if (reserva.Estado == EstadoReserva.Confirmada)
+          {
+            <a asp-action="Cancelar" asp-route-id="@reserva.Id" class="btn btn-sm btn-outline-danger">Cancelar</a>
+          }
+          @if (reserva.Estado != EstadoReserva.Cancelada)
+          {
+            <a asp-controller="Pagos" asp-action="Crear" asp-route-reservaId="@reserva.Id"
+               class="btn btn-sm btn-outline-primary">Pago</a>
           }
         </td>
       </tr>
