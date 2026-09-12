@@ -151,6 +151,68 @@ namespace mvc.Controllers
 
       ViewBag.Inmuebles = new SelectList(inmuebles, "Id", "Direccion");
     }
+    // Informe: lista las reservas actualmente vigentes (Estado == Confirmada)
+    // cuya fecha de fin todavia no llego.
+    public async Task<IActionResult> Vigentes()
+    {
+      var hoy = DateTime.Today;
+
+      var datos = await (
+          from r in _context.Reservas
+          join i in _context.Inquilinos on r.InquilinoId equals i.Id
+          join im in _context.Inmuebles on r.InmuebleId equals im.Id
+          where r.Estado == EstadoReserva.Confirmada && r.FechaHasta >= hoy
+          orderby r.FechaDesde
+          select new
+          {
+            Reserva = r,
+            NombreInquilino = i.Nombre + " " + i.Apellido,
+            DireccionInmueble = im.Direccion
+          }
+      ).ToListAsync();
+
+      var reservas = datos.Select(d =>
+      {
+        d.Reserva.NombreInquilino = d.NombreInquilino;
+        d.Reserva.DireccionInmueble = d.DireccionInmueble;
+        return d.Reserva;
+      }).ToList();
+
+      return View(reservas);
+    }
+
+    public async Task<IActionResult> TerminanEn(int dias = 30)
+    {
+      var hoy = DateTime.Today;
+      var fechaLimite = hoy.AddDays(dias);
+
+      var datos = await (
+          from r in _context.Reservas
+          join i in _context.Inquilinos on r.InquilinoId equals i.Id
+          join im in _context.Inmuebles on r.InmuebleId equals im.Id
+          where r.Estado == EstadoReserva.Confirmada
+             && r.FechaHasta >= hoy
+             && r.FechaHasta <= fechaLimite
+          orderby r.FechaHasta
+          select new
+          {
+            Reserva = r,
+            NombreInquilino = i.Nombre + " " + i.Apellido,
+            DireccionInmueble = im.Direccion
+          }
+      ).ToListAsync();
+
+      var reservas = datos.Select(d =>
+      {
+        d.Reserva.NombreInquilino = d.NombreInquilino;
+        d.Reserva.DireccionInmueble = d.DireccionInmueble;
+        return d.Reserva;
+      }).ToList();
+
+      ViewBag.Dias = dias;
+
+      return View(reservas);
+    }
 
     // Muestra la pantalla de finalización de una reserva, calculando
     // la multa posible de acuerdo con el tiempo restante y la fecha de corte.
