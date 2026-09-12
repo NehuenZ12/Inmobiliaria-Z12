@@ -2,8 +2,11 @@
 
 <h1>Reservas</h1>
 
-<a asp-action="Create" class="btn btn-primary mb-3">
-  +
+<div class="mb-3 d-flex gap-2">
+  <a asp-action="Create" class="btn btn-primary">+</a>
+  <a asp-action="Vigentes" class="btn btn-outline-success">Ver vigentes</a>
+  <a asp-action="TerminanEn" class="btn btn-outline-warning">Terminan pronto</a>
+</div>
 </a>
 
 <table class="table">
