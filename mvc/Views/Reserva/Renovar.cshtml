@@ -1,0 +1,34 @@
+@model mvc.Models.Reserva
+
+<h1>Renovar reserva</h1>
+
+<form asp-action="Renovar" method="post">
+  <input type="hidden" name="reservaOriginalId" value="@ViewBag.ReservaOriginalId" />
+  <input type="hidden" asp-for="InquilinoId" />
+  <input type="hidden" asp-for="InmuebleId" />
+
+  <div class="mb-3">
+    <label>Nueva fecha desde</label>
+    <input asp-for="FechaDesde" class="form-control" />
+    <span asp-validation-for="FechaDesde" class="text-danger"></span>
+  </div>
+
+  <div class="mb-3">
+    <label>Nueva fecha hasta</label>
+    <input asp-for="FechaHasta" class="form-control" />
+    <span asp-validation-for="FechaHasta" class="text-danger"></span>
+  </div>
+
+  <div class="mb-3">
+    <label>Monto diario</label>
+    <input asp-for="MontoDiario" class="form-control" />
+  </div>
+
+  <div class="mb-3">
+    <label>Cantidad de personas</label>
+    <input asp-for="CantidadPersonas" class="form-control" />
+  </div>
+
+  <button type="submit" class="btn btn-primary">Confirmar renovacion</button>
+  <a asp-action="Index" class="btn btn-secondary">Volver</a>
+</form>
