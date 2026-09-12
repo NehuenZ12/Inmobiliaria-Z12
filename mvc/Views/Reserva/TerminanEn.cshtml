@@ -1,0 +1,39 @@
+@model IEnumerable<mvc.Models.Reserva>
+
+<h1>Reservas que terminan pronto</h1>
+
+<form method="get" class="mb-3 d-flex align-items-end gap-2">
+  <div>
+    <label>Mostrar reservas que terminan en los proximos</label>
+    <input type="number" name="dias" value="@ViewBag.Dias" min="1" class="form-control"
+           style="width: 100px; display: inline-block;" />
+    <label>dias</label>
+  </div>
+  <button type="submit" class="btn btn-primary">Consultar</button>
+</form>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Codigo</th>
+      <th>Inquilino</th>
+      <th>Inmueble</th>
+      <th>Desde</th>
+      <th>Hasta</th>
+      <th>Monto diario</th>
+    </tr>
+  </thead>
+  <tbody>
+    @foreach (var reserva in Model)
+    {
+      <tr>
+        <td>@reserva.Id</td>
+        <td>@reserva.NombreInquilino</td>
+        <td>@reserva.DireccionInmueble</td>
+        <td>@reserva.FechaDesde.ToShortDateString()</td>
+        <td>@reserva.FechaHasta.ToShortDateString()</td>
+        <td>@reserva.MontoDiario</td>
+      </tr>
+    }
+  </tbody>
+</table>
