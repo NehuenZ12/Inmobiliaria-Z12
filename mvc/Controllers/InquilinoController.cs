@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using mvc.Models;
 
 namespace mvc.Controllers
 {
+  [Authorize]
+
   public class InquilinoController : Controller
   {
     private readonly AppDbContext _context;
@@ -16,9 +19,26 @@ namespace mvc.Controllers
 
     // LISTAR INQUILINOS
 
-    public async Task<IActionResult> Index()
+    private const int TamanioPagina = 3;
+
+    public async Task<IActionResult> Index(int pagina = 1)
     {
-      var inquilinos = await _context.Inquilinos.ToListAsync();
+      if (pagina < 1) pagina = 1;
+
+      var query = _context.Inquilinos
+          .OrderBy(i => i.Apellido)
+          .ThenBy(i => i.Nombre);
+
+      var totalInquilinos = await query.CountAsync();
+      var totalPaginas = (int)Math.Ceiling(totalInquilinos / (double)TamanioPagina);
+
+      var inquilinos = await query
+          .Skip((pagina - 1) * TamanioPagina)
+          .Take(TamanioPagina)
+          .ToListAsync();
+
+      ViewBag.PaginaActual = pagina;
+      ViewBag.TotalPaginas = totalPaginas;
 
       return View(inquilinos);
     }
