@@ -7,17 +7,23 @@ using mvc.Models;
 
 namespace mvc.Controllers
 {
+  // Controlador de reservas que gestiona el listado, detalle, creación,
+  // validación de disponibilidad y terminación de una reserva asociada a
+  // un inquilino, un inmueble y un usuario creador/terminador.
   [Authorize]
   public class ReservaController : Controller
   {
     private readonly AppDbContext _context;
 
+    // Constructor del controlador: recibe el contexto de base de datos
+    // para consultar inquilinos, inmuebles, reservas, pagos y usuarios.
     public ReservaController(AppDbContext context)
     {
       _context = context;
     }
 
-    // LISTAR RESERVAS
+    // Muestra el listado principal de reservas con datos derivados como
+    // nombre del inquilino y dirección del inmueble para facilitar la visualización.
     public async Task<IActionResult> Index()
     {
       var reservas = await _context.Reservas.ToListAsync();
@@ -37,7 +43,8 @@ namespace mvc.Controllers
       return View(reservas);
     }
 
-    // DETALLES DE UNA RESERVA (con auditoria)
+    // Recupera una reserva específica y complementa su vista con los nombres
+    // de usuario creador y terminador para mantener un registro de auditoría.
     public async Task<IActionResult> Detalles(int id)
     {
       var reserva = await _context.Reservas.FindAsync(id);
@@ -65,8 +72,8 @@ namespace mvc.Controllers
       return View(reserva);
     }
 
-    // CREAR RESERVA
-
+    // Presenta el formulario para crear una nueva reserva y precarga
+    // las listas desplegables de inquilinos e inmuebles disponibles.
     public async Task<IActionResult> Create()
     {
       await CargarListas();
@@ -74,6 +81,8 @@ namespace mvc.Controllers
       return View();
     }
 
+    // Procesa el envío del formulario de creación, validando fechas,
+    // disponibilidad del inmueble y registrando el usuario creador autenticado.
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(Reserva reserva)
@@ -91,6 +100,7 @@ namespace mvc.Controllers
       if (ModelState.IsValid)
       {
         reserva.UsuarioCreadorId = ObtenerIdUsuarioActual();
+        reserva.Estado = EstadoReserva.Pendiente;
 
         _context.Reservas.Add(reserva);
 
@@ -105,6 +115,8 @@ namespace mvc.Controllers
     }
 
 
+    // Verifica si el inmueble ya tiene otra reserva solapada en el rango de fechas.
+    // La reserva actual puede excluirse de la consulta al editar para evitar falsos positivos.
     private async Task<bool> InmuebleOcupado(int inmuebleId, DateTime fechaDesde, DateTime fechaHasta, int? reservaIdAExcluir)
     {
       var query = _context.Reservas.Where(r =>
@@ -121,6 +133,8 @@ namespace mvc.Controllers
     }
 
 
+    // Carga las listas para los selectores de inquilinos e inmuebles
+    // y las deja disponibles en la vista por medio de ViewBag.
     private async Task CargarListas()
     {
       var inquilinos = await _context.Inquilinos
@@ -138,7 +152,9 @@ namespace mvc.Controllers
       ViewBag.Inmuebles = new SelectList(inmuebles, "Id", "Direccion");
     }
 
-    public async Task<IActionResult> Terminar(int? id)
+    // Muestra la pantalla de finalización de una reserva, calculando
+    // la multa posible de acuerdo con el tiempo restante y la fecha de corte.
+    public async Task<IActionResult> Cancelar(int? id)
     {
       if (id == null) return NotFound();
 
@@ -158,10 +174,47 @@ namespace mvc.Controllers
 
       return View(reserva);
     }
+    public async Task<IActionResult> CheckIn(int? id)
+    {
+      if (id == null) return NotFound();
 
-    [HttpPost, ActionName("Terminar")]
+      var reserva = await _context.Reservas.FindAsync(id);
+
+      if (reserva == null) return NotFound();
+
+      if (reserva.Estado != EstadoReserva.Pendiente)
+      {
+        return RedirectToAction(nameof(Index));
+      }
+
+      return View(reserva);
+    }
+
+    [HttpPost, ActionName("CheckIn")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> TerminarConfirmado(int id)
+    public async Task<IActionResult> CheckInConfirmado(int id)
+    {
+      var reserva = await _context.Reservas.FindAsync(id);
+
+      if (reserva == null) return NotFound();
+
+      if (reserva.Estado != EstadoReserva.Pendiente)
+      {
+        return RedirectToAction(nameof(Index));
+      }
+
+      reserva.Estado = EstadoReserva.Confirmada;
+
+      await _context.SaveChangesAsync();
+
+      return RedirectToAction(nameof(Index));
+    }
+
+    // Confirma la terminación de la reserva, genera el pago por multa
+    // si aplica y registra al usuario que finaliza la operación.
+    [HttpPost, ActionName("Cancelar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CancelarConfirmado(int id)
     {
       var reserva = await _context.Reservas.FindAsync(id);
 
@@ -190,12 +243,14 @@ namespace mvc.Controllers
 
       reserva.FechaTerminacion = fechaTerminacion;
       reserva.UsuarioTerminadorId = usuarioActual;
+      reserva.Estado = EstadoReserva.Cancelada;
 
       await _context.SaveChangesAsync();
-
       return RedirectToAction(nameof(Index));
     }
 
+    // Calcula la multa por terminación anticipada usando el porcentaje
+    // y el monto restante según la fracción del período reservada.
     private (decimal multa, int porcentaje) CalcularMulta(Reserva reserva, DateTime fechaTerminacion)
     {
       double diasTotales = (reserva.FechaHasta - reserva.FechaDesde).TotalDays;
@@ -212,9 +267,10 @@ namespace mvc.Controllers
       return (multa, porcentaje);
     }
 
-    // AUXILIAR
+    // Sección auxiliar del controlador.
 
-    // Devuelve el ID del usuario logueado
+    // Recupera el identificador del usuario autenticado desde el claim
+    // de identidad del sistema para registrar auditoría en reservas y pagos.
     private int ObtenerIdUsuarioActual()
     {
       var idClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
