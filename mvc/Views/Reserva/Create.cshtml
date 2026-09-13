@@ -68,8 +68,9 @@
   <partial name="_ValidationScriptsPartial" />
 
   <script>
-    document.getElementById('InmuebleId').addEventListener('change', function () {
-      var opcion = this.options[this.selectedIndex];
+    function autocompletarInmueble() {
+      var select = document.getElementById('InmuebleId');
+      var opcion = select.options[select.selectedIndex];
       var precio = opcion.getAttribute('data-precio');
       var cupo = opcion.getAttribute('data-cupo');
 
@@ -79,6 +80,14 @@
       if (cupo) {
         document.getElementById('CantidadPersonas').value = cupo;
       }
-    });
+    }
+
+    document.getElementById('InmuebleId').addEventListener('change', autocompletarInmueble);
+
+    // Si la pagina carga con un inmueble ya preseleccionado (por ejemplo,
+    // viniendo del boton "Reservar" de InmueblesLibres), autocompletamos de una.
+    if (document.getElementById('InmuebleId').value) {
+      autocompletarInmueble();
+    }
   </script>
 }

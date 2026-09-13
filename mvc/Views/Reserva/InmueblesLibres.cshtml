@@ -27,6 +27,8 @@
       <th>Cupo</th>
       <th>Precio por dia</th>
       <th>Propietario</th>
+      <th>Acciones</th>
+
     </tr>
   </thead>
   <tbody>
@@ -38,7 +40,17 @@
         <td>@inmueble.Cupo</td>
         <td>@inmueble.PrecioPorDia</td>
         <td>@inmueble.Propietario?.Nombre</td>
+        <td>
+          <a asp-controller="Reserva" asp-action="Create" asp-route-inmuebleId="@inmueble.Id"
+             asp-route-desde="@ViewBag.Desde.ToString("yyyy-MM-dd")"
+             asp-route-hasta="@ViewBag.Hasta.ToString("yyyy-MM-dd")" class="btn btn-sm btn-primary">
+            Reservar
+          </a>
+        </td>
       </tr>
+
     }
+
+    
   </tbody>
 </table>
