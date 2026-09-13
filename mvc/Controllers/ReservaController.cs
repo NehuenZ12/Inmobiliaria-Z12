@@ -111,11 +111,28 @@ namespace mvc.Controllers
 
     // Presenta el formulario para crear una nueva reserva y precarga
     // las listas desplegables de inquilinos e inmuebles disponibles.
-    public async Task<IActionResult> Create()
+    public async Task<IActionResult> Create(int? inmuebleId, DateTime? desde, DateTime? hasta)
     {
       await CargarListas();
 
-      return View();
+      var reserva = new Reserva();
+
+      if (inmuebleId.HasValue)
+      {
+        reserva.InmuebleId = inmuebleId.Value;
+      }
+
+      if (desde.HasValue)
+      {
+        reserva.FechaDesde = desde.Value;
+      }
+
+      if (hasta.HasValue)
+      {
+        reserva.FechaHasta = hasta.Value;
+      }
+
+      return View(reserva);
     }
 
     // Procesa el envío del formulario de creación, validando fechas,
