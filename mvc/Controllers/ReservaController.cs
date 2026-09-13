@@ -220,10 +220,9 @@ namespace mvc.Controllers
 
       var inmuebles = await _context.Inmuebles
           .OrderBy(i => i.Direccion)
-          .Select(i => new { i.Id, i.Direccion })
           .ToListAsync();
 
-      ViewBag.Inmuebles = new SelectList(inmuebles, "Id", "Direccion");
+      ViewBag.Inmuebles = inmuebles;
     }
     // Informe: lista las reservas actualmente vigentes (Estado == Confirmada)
     // cuya fecha de fin todavia no llego.

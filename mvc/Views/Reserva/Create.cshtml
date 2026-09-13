@@ -16,8 +16,15 @@
 
   <div class="mb-3">
     <label asp-for="InmuebleId" class="form-label">Inmueble</label>
-    <select asp-for="InmuebleId" class="form-control" asp-items="ViewBag.Inmuebles">
+    <select asp-for="InmuebleId" class="form-control" id="InmuebleId">
       <option value="">-- Seleccione un inmueble --</option>
+      @foreach (var im in (List<mvc.Models.Inmueble>)ViewBag.Inmuebles)
+      {
+        <option value="@im.Id" data-precio="@im.PrecioPorDia.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                data-cupo="@im.Cupo">
+          @im.Direccion
+        </option>
+      }
     </select>
     <span asp-validation-for="InmuebleId" class="text-danger"></span>
   </div>
@@ -36,13 +43,13 @@
 
   <div class="mb-3">
     <label asp-for="MontoDiario" class="form-label">Monto diario</label>
-    <input asp-for="MontoDiario" class="form-control" />
+    <input asp-for="MontoDiario" class="form-control" readonly />
     <span asp-validation-for="MontoDiario" class="text-danger"></span>
   </div>
 
   <div class="mb-3">
     <label asp-for="CantidadPersonas" class="form-label">Cantidad de personas</label>
-    <input asp-for="CantidadPersonas" class="form-control" />
+    <input asp-for="CantidadPersonas" class="form-control" readonly />
     <span asp-validation-for="CantidadPersonas" class="text-danger"></span>
   </div>
 
@@ -56,6 +63,22 @@
 
 </form>
 
+@* Script temporal hasta migrar a Vue o Next.js *@
 @section Scripts {
   <partial name="_ValidationScriptsPartial" />
+
+  <script>
+    document.getElementById('InmuebleId').addEventListener('change', function () {
+      var opcion = this.options[this.selectedIndex];
+      var precio = opcion.getAttribute('data-precio');
+      var cupo = opcion.getAttribute('data-cupo');
+
+      if (precio) {
+        document.getElementById('MontoDiario').value = precio;
+      }
+      if (cupo) {
+        document.getElementById('CantidadPersonas').value = cupo;
+      }
+    });
+  </script>
 }
