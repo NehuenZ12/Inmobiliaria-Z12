@@ -16,6 +16,7 @@ namespace mvc.Models
     public DbSet<Reserva> Reservas { get; set; }
     public DbSet<Pago> Pagos { get; set; }
     public DbSet<TipoInmueble> TiposInmueble { get; set; }
+    public DbSet<Imagen> Imagenes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -119,6 +120,34 @@ namespace mvc.Models
           .HasOne(i => i.Propietario)
           .WithMany()
           .HasForeignKey(i => i.PropietarioId);
+
+      modelBuilder.Entity<Imagen>()
+          .ToTable("imagen");
+
+      modelBuilder.Entity<Imagen>()
+          .Property(i => i.Id)
+          .HasColumnName("id");
+
+      modelBuilder.Entity<Imagen>()
+          .Property(i => i.Url)
+          .HasColumnName("url");
+
+      modelBuilder.Entity<Imagen>()
+          .Property(i => i.Descripcion)
+          .HasColumnName("descripcion");
+
+      modelBuilder.Entity<Imagen>()
+          .Property(i => i.EsPrincipal)
+          .HasColumnName("es_principal");
+
+      modelBuilder.Entity<Imagen>()
+          .Property(i => i.InmuebleId)
+          .HasColumnName("inmueble_id");
+
+      modelBuilder.Entity<Imagen>()
+          .HasOne(i => i.Inmueble)
+          .WithMany(i => i.Imagenes)
+          .HasForeignKey(i => i.InmuebleId);
 
       // INQUILINO
 

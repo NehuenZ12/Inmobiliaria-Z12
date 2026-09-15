@@ -39,5 +39,8 @@ namespace mvc.Models
 
     // Tipo asociado al inmueble
     public TipoInmueble? TipoInmueble { get; set; }
+
+    // Imagenes asociadas al inmueble
+    public ICollection<Imagen> Imagenes { get; set; } = new List<Imagen>();
   }
 }

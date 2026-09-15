@@ -6,7 +6,7 @@ Proyecto Inmobiliaria Laboratorio 2
 
 ## 👥 Integrantes del Grupo
 
-- **Aldo Nehuen Zerdá** - *aldonehuen123@gmail.com* - [@NehuenZ12](https://github.com/nehuenZ12) - Discord: `usuario_discord`
+- **Aldo Nehuen Zerdá** - *aldonehuen123@gmail.com* - [@NehuenZ12](https://github.com/nehuenZ12)
 - **Heber Gomez** - *heber12398@gmail.com* - [@owengmz](https://github.com/owengmz) - Discord: `usuario_discord`
 - **José Gabriel Garces Brocal** - *jjoosseegg69@gmail.com* - [@josegarcesss](https://github.com/josegarcesss) - Discord: `usuario_discord`
 
