@@ -21,13 +21,88 @@ namespace mvc.Controllers
 
         // LISTAR INMUEBLES
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+            string? buscar,
+            int? propietarioId,
+            bool? disponible,
+            int pagina = 1)
         {
-            var inmuebles = await _context.Inmuebles
+            // Cantidad de registros por pagina
+            int registrosPorPagina = 5;
+
+            // Consulta base
+            var consulta = _context.Inmuebles
                 .Include(i => i.Propietario)
                 .Include(i => i.TipoInmueble)
                 .Include(i => i.Imagenes)
+                .AsQueryable();
+
+            // BUSQUEDA
+
+            if (!string.IsNullOrWhiteSpace(buscar))
+            {
+                buscar = buscar.Trim();
+
+                consulta = consulta.Where(i =>
+                    i.Direccion.Contains(buscar) ||
+                    i.Propietario!.Nombre.Contains(buscar) ||
+                    i.Propietario.Apellido.Contains(buscar));
+            }
+
+            // FILTRO POR PROPIETARIO
+
+            if (propietarioId.HasValue)
+            {
+                consulta = consulta.Where(i =>
+                    i.PropietarioId == propietarioId.Value);
+            }
+
+            // FILTRO POR DISPONIBILIDAD
+
+            if (disponible.HasValue)
+            {
+                consulta = consulta.Where(i =>
+                    i.Disponible == disponible.Value);
+            }
+
+            // TOTAL DE REGISTROS
+
+            int totalRegistros = await consulta.CountAsync();
+
+            // Cantidad total de paginas
+            int totalPaginas = (int)Math.Ceiling(
+                totalRegistros / (double)registrosPorPagina
+            );
+
+            // Evitamos paginas invalidas
+            if (pagina < 1)
+            {
+                pagina = 1;
+            }
+
+            if (totalPaginas > 0 && pagina > totalPaginas)
+            {
+                pagina = totalPaginas;
+            }
+
+            // PAGINADO
+
+            var inmuebles = await consulta
+                .OrderBy(i => i.Id)
+                .Skip((pagina - 1) * registrosPorPagina)
+                .Take(registrosPorPagina)
                 .ToListAsync();
+
+            // DATOS PARA LA VISTA
+
+            await CargarPropietarios();
+
+            ViewBag.Buscar = buscar;
+            ViewBag.PropietarioId = propietarioId;
+            ViewBag.Disponible = disponible;
+
+            ViewBag.PaginaActual = pagina;
+            ViewBag.TotalPaginas = totalPaginas;
 
             return View(inmuebles);
         }
@@ -65,7 +140,6 @@ namespace mvc.Controllers
                         "inmuebles"
                     );
 
-                    // Si la carpeta no existe, la creamos
                     if (!Directory.Exists(carpeta))
                     {
                         Directory.CreateDirectory(carpeta);
@@ -75,14 +149,13 @@ namespace mvc.Controllers
 
                     foreach (var imagen in imagenes)
                     {
-                        // Ignorar archivos vacios
                         if (imagen.Length == 0)
                         {
                             continue;
                         }
 
-                        // Generar nombre unico
                         string extension = Path.GetExtension(imagen.FileName);
+
                         string nombreArchivo =
                             Guid.NewGuid().ToString() + extension;
 
@@ -91,7 +164,6 @@ namespace mvc.Controllers
                             nombreArchivo
                         );
 
-                        // Guardar archivo fisicamente
                         using (var stream = new FileStream(
                             rutaFisica,
                             FileMode.Create))
@@ -99,7 +171,6 @@ namespace mvc.Controllers
                             await imagen.CopyToAsync(stream);
                         }
 
-                        // Guardar informacion en la base de datos
                         var nuevaImagen = new Imagen
                         {
                             Url = "/uploads/inmuebles/" + nombreArchivo,
@@ -110,7 +181,6 @@ namespace mvc.Controllers
 
                         _context.Imagenes.Add(nuevaImagen);
 
-                        // Solo la primera es principal
                         esPrimeraImagen = false;
                     }
 
@@ -210,7 +280,8 @@ namespace mvc.Controllers
 
                 await _context.SaveChangesAsync();
 
-                TempData["Ok"] = "Inmueble eliminado correctamente";
+                TempData["Ok"] =
+                    "Inmueble eliminado correctamente";
             }
             catch (DbUpdateException)
             {
