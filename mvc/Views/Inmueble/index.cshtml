@@ -4,86 +4,317 @@
 
 @if (TempData["Ok"] != null)
 {
-  <div class="alert alert-success">@TempData["Ok"]</div>
+    <div class="alert alert-success">
+        @TempData["Ok"]
+    </div>
 }
 
 @if (TempData["Error"] != null)
 {
-  <div class="alert alert-danger">@TempData["Error"]</div>
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
 }
 
 <a asp-action="Create" class="btn btn-primary mb-3">
-  +
+    +
 </a>
 
+
+<!-- =========================================================
+     FILTROS Y BÚSQUEDA
+     ========================================================= -->
+
+<form asp-action="Index" method="get" class="mb-4">
+
+    <div class="row">
+
+        <!-- Busqueda -->
+        <div class="col-md-4">
+            <label class="form-label">
+                Buscar
+            </label>
+
+            <input type="text"
+                   name="buscar"
+                   value="@ViewBag.Buscar"
+                   class="form-control"
+                   placeholder="Dirección o propietario" />
+        </div>
+
+
+        <!-- Propietario -->
+        <div class="col-md-3">
+            <label class="form-label">
+                Propietario
+            </label>
+
+            <select name="propietarioId"
+                    class="form-select">
+
+                <option value="">
+                    Todos
+                </option>
+
+                @foreach (var propietario in ViewBag.Propietarios)
+                {
+                    if (ViewBag.PropietarioId != null &&
+                        ViewBag.PropietarioId.ToString() == propietario.Value)
+                    {
+                        <option value="@propietario.Value" selected>
+                            @propietario.Text
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="@propietario.Value">
+                            @propietario.Text
+                        </option>
+                    }
+                }
+
+            </select>
+        </div>
+
+
+        <!-- Disponibilidad -->
+        <div class="col-md-3">
+            <label class="form-label">
+                Disponibilidad
+            </label>
+
+            <select name="disponible"
+                    class="form-select">
+
+                <option value="">Todos</option>
+
+                @if (ViewBag.Disponible != null &&
+                     ViewBag.Disponible.ToString() == "True")
+                {
+                    <option value="true" selected>
+                        Disponible
+                    </option>
+                }
+                else
+                {
+                    <option value="true">
+                        Disponible
+                    </option>
+                }
+
+                @if (ViewBag.Disponible != null &&
+                     ViewBag.Disponible.ToString() == "False")
+                {
+                    <option value="false" selected>
+                        No disponible
+                    </option>
+                }
+                else
+                {
+                    <option value="false">
+                        No disponible
+                    </option>
+                }
+
+            </select>
+        </div>
+
+
+        <!-- Botón -->
+        <div class="col-md-2 d-flex align-items-end">
+
+            <button type="submit"
+                    class="btn btn-primary">
+                Buscar
+            </button>
+
+        </div>
+
+    </div>
+
+</form>
+
+
+<!-- =========================================================
+     TABLA
+     ========================================================= -->
+
 <table class="table">
-  <thead>
-    <tr>
-      <th>Código</th>
-      <th>Dirección</th>
-      <th>Cupo</th>
-      <th>Tipo</th>
-      <th>Precio por día</th>
-      <th>Disponible</th>
-      <th>Propietario</th>
-      <th>Imagen</th>
-      <th>Acciones</th>
-    </tr>
-  </thead>
 
-  <tbody>
-    @foreach (var inmueble in Model)
-    {
-      <tr>
-        <td>@inmueble.Id</td>
-        <td>@inmueble.Direccion</td>
-        <td>@inmueble.Cupo</td>
-        <td>@inmueble.TipoInmueble?.Nombre</td>
-        <td>@inmueble.PrecioPorDia</td>
-        <td>
-          @(inmueble.Disponible ? "Sí" : "No")
-        </td>
-        <td>
-          @inmueble.Propietario.Nombre
-          @inmueble.Propietario.Apellido
-        </td>
+    <thead>
+        <tr>
+            <th>Código</th>
+            <th>Dirección</th>
+            <th>Cupo</th>
+            <th>Tipo</th>
+            <th>Precio por día</th>
+            <th>Disponible</th>
+            <th>Propietario</th>
+            <th>Imagen</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
 
-        <td>
-            @{
-                var imagenPrincipal = inmueble.Imagenes
-                    .FirstOrDefault(i => i.EsPrincipal);
-            }
+    <tbody>
 
-            @if (imagenPrincipal != null)
-            {
-                <img src="@imagenPrincipal.Url"
-                    alt="Imagen del inmueble"
-                    style="width: 100px; height: 70px; object-fit: cover;" />
-            }
-            else
-            {
-                <span>Sin imagen</span>
-            }
-        </td>
+        @foreach (var inmueble in Model)
+        {
+            <tr>
 
-        <td>
-          <a asp-action="Edit" asp-route-id="@inmueble.Id" class="btn btn-primary">
-            Editar
-          </a>
+                <td>
+                    @inmueble.Id
+                </td>
 
-          @if (User.IsInRole("Administrador"))
-          {
-            <form asp-action="Delete" asp-route-id="@inmueble.Id" method="post" style="display:inline">
+                <td>
+                    @inmueble.Direccion
+                </td>
 
-              <button type="submit" class="btn btn-danger"
-                      onclick="return confirm('¿Está seguro de eliminar este inmueble?')">
-                Eliminar
-              </button>
+                <td>
+                    @inmueble.Cupo
+                </td>
 
-            </form>
-          }
-        </td>
-      </tr>
-    }
-  </tbody>
+                <td>
+                    @inmueble.TipoInmueble?.Nombre
+                </td>
+
+                <td>
+                    @inmueble.PrecioPorDia
+                </td>
+
+                <td>
+                    @(inmueble.Disponible ? "Sí" : "No")
+                </td>
+
+                <td>
+                    @inmueble.Propietario?.Nombre
+                    @inmueble.Propietario?.Apellido
+                </td>
+
+
+                <!-- Imagen principal -->
+                <td>
+
+                    @{
+                        var imagenPrincipal = inmueble.Imagenes
+                            .FirstOrDefault(i => i.EsPrincipal);
+                    }
+
+                    @if (imagenPrincipal != null)
+                    {
+                        <img src="@imagenPrincipal.Url"
+                             alt="Imagen del inmueble"
+                             style="width:100px; height:70px; object-fit:cover;" />
+                    }
+                    else
+                    {
+                        <span>
+                            Sin imagen
+                        </span>
+                    }
+
+                </td>
+
+
+                <!-- Acciones -->
+                <td>
+
+                    <a asp-action="Edit"
+                       asp-route-id="@inmueble.Id"
+                       class="btn btn-primary">
+                        Editar
+                    </a>
+
+
+                    @if (User.IsInRole("Administrador"))
+                    {
+                        <form asp-action="Delete"
+                              asp-route-id="@inmueble.Id"
+                              method="post"
+                              style="display:inline">
+
+                            <button type="submit"
+                                    class="btn btn-danger"
+                                    onclick="return confirm('¿Esta seguro de eliminar este inmueble?')">
+                                Eliminar
+                            </button>
+
+                        </form>
+                    }
+
+                </td>
+
+            </tr>
+        }
+
+    </tbody>
+
 </table>
+
+
+<!-- =========================================================
+     PAGINADO
+     ========================================================= -->
+
+@if (ViewBag.TotalPaginas > 1)
+{
+    <nav aria-label="Paginado">
+
+        <ul class="pagination">
+
+            <!-- Anterior -->
+            <li class="page-item @(ViewBag.PaginaActual == 1 ? "disabled" : "")">
+
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-route-pagina="@(ViewBag.PaginaActual - 1)"
+                   asp-route-buscar="@ViewBag.Buscar"
+                   asp-route-propietarioId="@ViewBag.PropietarioId"
+                   asp-route-disponible="@ViewBag.Disponible">
+
+                    Anterior
+
+                </a>
+
+            </li>
+
+
+            <!-- Numero de paginas -->
+            @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+            {
+                <li class="page-item @(i == ViewBag.PaginaActual ? "active" : "")">
+
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-pagina="@i"
+                       asp-route-buscar="@ViewBag.Buscar"
+                       asp-route-propietarioId="@ViewBag.PropietarioId"
+                       asp-route-disponible="@ViewBag.Disponible">
+
+                        @i
+
+                    </a>
+
+                </li>
+            }
+
+
+            <!-- Siguiente -->
+            <li class="page-item @(ViewBag.PaginaActual == ViewBag.TotalPaginas ? "disabled" : "")">
+
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-route-pagina="@(ViewBag.PaginaActual + 1)"
+                   asp-route-buscar="@ViewBag.Buscar"
+                   asp-route-propietarioId="@ViewBag.PropietarioId"
+                   asp-route-disponible="@ViewBag.Disponible">
+
+                    Siguiente
+
+                </a>
+
+            </li>
+
+        </ul>
+
+    </nav>
+}
