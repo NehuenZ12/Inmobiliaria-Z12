@@ -19,6 +19,12 @@ namespace mvc.Controllers
     // LISTAR PAGOS POR RESERVA
     public async Task<IActionResult> Index(int idReserva)
     {
+      // Si la reserva no existe no mostramos el listado
+      if (!await CargarDatosReserva(idReserva))
+      {
+        return NotFound();
+      }
+
       var pagos = await _context.Pagos
           .Where(p => p.ReservaId == idReserva)
           .OrderByDescending(p => p.Fecha)
@@ -42,7 +48,6 @@ namespace mvc.Controllers
             : null;
       }
 
-      ViewBag.ReservaId = idReserva;
       return View(pagos);
     }
 
@@ -76,8 +81,21 @@ namespace mvc.Controllers
     }
 
     // CREAR PAGO
-    public IActionResult Crear(int reservaId)
+    public async Task<IActionResult> Crear(int reservaId)
     {
+      var reserva = await _context.Reservas.FindAsync(reservaId);
+      if (reserva == null)
+      {
+        return NotFound();
+      }
+
+      // Misma regla que en el listado de reservas: no cargar pagos si esta cancelada
+      if (reserva.Estado == EstadoReserva.Cancelada)
+      {
+        TempData["Error"] = "No se pueden cargar pagos en una reserva cancelada.";
+        return RedirectToAction(nameof(Index), new { idReserva = reservaId });
+      }
+
       var pago = new Pago
       {
         ReservaId = reservaId,
@@ -92,8 +110,20 @@ namespace mvc.Controllers
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Crear(Pago pago)
     {
-      // Asignamos el usuario logueado como creador
+      // El creador siempre es el usuario logueado, no lo que venga en el form
       pago.UsuarioCreadorId = ObtenerIdUsuarioActual();
+
+      var reserva = await _context.Reservas.FindAsync(pago.ReservaId);
+      if (reserva == null)
+      {
+        return NotFound();
+      }
+
+      if (reserva.Estado == EstadoReserva.Cancelada)
+      {
+        TempData["Error"] = "No se pueden cargar pagos en una reserva cancelada.";
+        return RedirectToAction(nameof(Index), new { idReserva = pago.ReservaId });
+      }
 
       if (!ModelState.IsValid)
       {
@@ -197,6 +227,41 @@ namespace mvc.Controllers
     {
       var idClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
       return int.TryParse(idClaim, out int id) ? id : 0;
+    }
+
+    // Completa el ViewBag con datos de la reserva para el informe.
+    // Devuelve false si la reserva no existe.
+    private async Task<bool> CargarDatosReserva(int idReserva)
+    {
+      var datos = await (
+          from r in _context.Reservas
+          join i in _context.Inquilinos on r.InquilinoId equals i.Id
+          join im in _context.Inmuebles on r.InmuebleId equals im.Id
+          where r.Id == idReserva
+          select new
+          {
+            r.Id,
+            NombreInquilino = i.Nombre + " " + i.Apellido,
+            DireccionInmueble = im.Direccion,
+            r.FechaDesde,
+            r.FechaHasta,
+            r.Estado
+          }
+      ).FirstOrDefaultAsync();
+
+      if (datos == null)
+      {
+        return false;
+      }
+
+      ViewBag.ReservaId = datos.Id;
+      ViewBag.NombreInquilino = datos.NombreInquilino;
+      ViewBag.DireccionInmueble = datos.DireccionInmueble;
+      ViewBag.FechaDesde = datos.FechaDesde;
+      ViewBag.FechaHasta = datos.FechaHasta;
+      ViewBag.EstadoReserva = datos.Estado;
+      ViewBag.PuedeCargarPago = datos.Estado != EstadoReserva.Cancelada;
+      return true;
     }
   }
 }
