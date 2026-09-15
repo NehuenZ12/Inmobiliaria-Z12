@@ -26,6 +26,7 @@
       <th>Precio por día</th>
       <th>Disponible</th>
       <th>Propietario</th>
+      <th>Imagen</th>
       <th>Acciones</th>
     </tr>
   </thead>
@@ -45,6 +46,24 @@
         <td>
           @inmueble.Propietario.Nombre
           @inmueble.Propietario.Apellido
+        </td>
+
+        <td>
+            @{
+                var imagenPrincipal = inmueble.Imagenes
+                    .FirstOrDefault(i => i.EsPrincipal);
+            }
+
+            @if (imagenPrincipal != null)
+            {
+                <img src="@imagenPrincipal.Url"
+                    alt="Imagen del inmueble"
+                    style="width: 100px; height: 70px; object-fit: cover;" />
+            }
+            else
+            {
+                <span>Sin imagen</span>
+            }
         </td>
 
         <td>
