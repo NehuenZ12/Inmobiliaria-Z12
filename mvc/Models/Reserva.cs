@@ -6,7 +6,6 @@ namespace mvc.Models
   public class Reserva
   {
     public int Id { get; set; }
-
     [Required(ErrorMessage = "Debe seleccionar un inquilino")]
     public int InquilinoId { get; set; }
 
@@ -44,6 +43,12 @@ namespace mvc.Models
     public string? NombreUsuarioCreador { get; set; }
 
     [NotMapped]
+    public string EstadoMostrado =>
+    Estado == EstadoReserva.Confirmada && FechaHasta.Date < DateTime.Today
+        ? "Completada"
+        : Estado.ToString();
+
+    [NotMapped]
     public string? NombreUsuarioTerminador { get; set; }
 
     [NotMapped]
@@ -53,5 +58,6 @@ namespace mvc.Models
     public string? DireccionInmueble { get; set; }
 
     public decimal ImporteTotal => (decimal)(FechaHasta - FechaDesde).TotalDays * MontoDiario;
+
   }
 }

@@ -1,6 +1,6 @@
 @model mvc.Models.Pago
 
-<h1>Nuevo pago</h1>
+<h1>Nuevo pago de la reserva @Model.ReservaId</h1>
 
 <form asp-action="Crear" method="post">
   <input type="hidden" asp-for="ReservaId" />

@@ -6,177 +6,322 @@ using mvc.Models;
 
 namespace mvc.Controllers
 {
-  public class InmuebleController : Controller
-  {
-    private readonly AppDbContext _context;
-
-    public InmuebleController(AppDbContext context)
+    public class InmuebleController : Controller
     {
-      _context = context;
-    }
+        private readonly AppDbContext _context;
+        private readonly IWebHostEnvironment _environment;
 
-    // LISTAR INMUEBLES
-
-    public async Task<IActionResult> Index()
-    {
-      var inmuebles = await _context.Inmuebles
-          .Include(i => i.Propietario)
-          .Include(i => i.TipoInmueble)
-          .ToListAsync();
-
-      return View(inmuebles);
-    }
-
-    // CREAR INMUEBLE
-
-    public async Task<IActionResult> Create()
-    {
-      await CargarPropietarios();
-      await CargarTipos();
-
-      return View();
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(Inmueble inmueble)
-    {
-      if (ModelState.IsValid)
-      {
-        _context.Inmuebles.Add(inmueble);
-
-        await _context.SaveChangesAsync();
-
-        return RedirectToAction(nameof(Index));
-      }
-
-      await CargarPropietarios();
-      await CargarTipos();
-
-      return View(inmueble);
-    }
-
-
-    // EDITAR INMUEBLE
-
-    public async Task<IActionResult> Edit(int? id)
-    {
-      if (id == null)
-      {
-        return NotFound();
-      }
-
-      var inmueble = await _context.Inmuebles.FindAsync(id);
-
-      if (inmueble == null)
-      {
-        return NotFound();
-      }
-
-      await CargarPropietarios();
-      await CargarTipos();
-
-      return View(inmueble);
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, Inmueble inmueble)
-    {
-      if (id != inmueble.Id)
-      {
-        return NotFound();
-      }
-
-      if (ModelState.IsValid)
-      {
-        // traemos el original y copiamos solo los campos del form
-        var actual = await _context.Inmuebles.FindAsync(id);
-
-        if (actual == null)
+        public InmuebleController(
+            AppDbContext context,
+            IWebHostEnvironment environment)
         {
-          return NotFound();
+            _context = context;
+            _environment = environment;
         }
 
-        actual.Direccion = inmueble.Direccion;
-        actual.Cupo = inmueble.Cupo;
-        actual.Latitud = inmueble.Latitud;
-        actual.Longitud = inmueble.Longitud;
-        actual.PrecioPorDia = inmueble.PrecioPorDia;
-        actual.PorcentajeReserva = inmueble.PorcentajeReserva;
-        actual.Disponible = inmueble.Disponible;
-        actual.PropietarioId = inmueble.PropietarioId;
-        actual.TipoId = inmueble.TipoId;
+        // LISTAR INMUEBLES
 
-        await _context.SaveChangesAsync();
+        public async Task<IActionResult> Index(
+            string? buscar,
+            int? propietarioId,
+            bool? disponible,
+            int pagina = 1)
+        {
+            // Cantidad de registros por pagina
+            int registrosPorPagina = 5;
 
-        return RedirectToAction(nameof(Index));
-      }
+            // Consulta base
+            var consulta = _context.Inmuebles
+                .Include(i => i.Propietario)
+                .Include(i => i.TipoInmueble)
+                .Include(i => i.Imagenes)
+                .AsQueryable();
 
-      await CargarPropietarios();
-      await CargarTipos();
+            // BUSQUEDA
 
-      return View(inmueble);
+            if (!string.IsNullOrWhiteSpace(buscar))
+            {
+                buscar = buscar.Trim();
+
+                consulta = consulta.Where(i =>
+                    i.Direccion.Contains(buscar) ||
+                    i.Propietario!.Nombre.Contains(buscar) ||
+                    i.Propietario.Apellido.Contains(buscar));
+            }
+
+            // FILTRO POR PROPIETARIO
+
+            if (propietarioId.HasValue)
+            {
+                consulta = consulta.Where(i =>
+                    i.PropietarioId == propietarioId.Value);
+            }
+
+            // FILTRO POR DISPONIBILIDAD
+
+            if (disponible.HasValue)
+            {
+                consulta = consulta.Where(i =>
+                    i.Disponible == disponible.Value);
+            }
+
+            // TOTAL DE REGISTROS
+
+            int totalRegistros = await consulta.CountAsync();
+
+            // Cantidad total de paginas
+            int totalPaginas = (int)Math.Ceiling(
+                totalRegistros / (double)registrosPorPagina
+            );
+
+            // Evitamos paginas invalidas
+            if (pagina < 1)
+            {
+                pagina = 1;
+            }
+
+            if (totalPaginas > 0 && pagina > totalPaginas)
+            {
+                pagina = totalPaginas;
+            }
+
+            // PAGINADO
+
+            var inmuebles = await consulta
+                .OrderBy(i => i.Id)
+                .Skip((pagina - 1) * registrosPorPagina)
+                .Take(registrosPorPagina)
+                .ToListAsync();
+
+            // DATOS PARA LA VISTA
+
+            await CargarPropietarios();
+
+            ViewBag.Buscar = buscar;
+            ViewBag.PropietarioId = propietarioId;
+            ViewBag.Disponible = disponible;
+
+            ViewBag.PaginaActual = pagina;
+            ViewBag.TotalPaginas = totalPaginas;
+
+            return View(inmuebles);
+        }
+
+        // CREAR INMUEBLE
+
+        public async Task<IActionResult> Create()
+        {
+            await CargarPropietarios();
+            await CargarTipos();
+
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(
+            Inmueble inmueble,
+            List<IFormFile>? imagenes)
+        {
+            if (ModelState.IsValid)
+            {
+                // Guardamos primero el inmueble para obtener su Id
+                _context.Inmuebles.Add(inmueble);
+
+                await _context.SaveChangesAsync();
+
+                // GUARDAR IMAGENES
+
+                if (imagenes != null && imagenes.Count > 0)
+                {
+                    string carpeta = Path.Combine(
+                        _environment.WebRootPath,
+                        "uploads",
+                        "inmuebles"
+                    );
+
+                    if (!Directory.Exists(carpeta))
+                    {
+                        Directory.CreateDirectory(carpeta);
+                    }
+
+                    bool esPrimeraImagen = true;
+
+                    foreach (var imagen in imagenes)
+                    {
+                        if (imagen.Length == 0)
+                        {
+                            continue;
+                        }
+
+                        string extension = Path.GetExtension(imagen.FileName);
+
+                        string nombreArchivo =
+                            Guid.NewGuid().ToString() + extension;
+
+                        string rutaFisica = Path.Combine(
+                            carpeta,
+                            nombreArchivo
+                        );
+
+                        using (var stream = new FileStream(
+                            rutaFisica,
+                            FileMode.Create))
+                        {
+                            await imagen.CopyToAsync(stream);
+                        }
+
+                        var nuevaImagen = new Imagen
+                        {
+                            Url = "/uploads/inmuebles/" + nombreArchivo,
+                            Descripcion = imagen.FileName,
+                            EsPrincipal = esPrimeraImagen,
+                            InmuebleId = inmueble.Id
+                        };
+
+                        _context.Imagenes.Add(nuevaImagen);
+
+                        esPrimeraImagen = false;
+                    }
+
+                    await _context.SaveChangesAsync();
+                }
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            await CargarPropietarios();
+            await CargarTipos();
+
+            return View(inmueble);
+        }
+
+        // EDITAR INMUEBLE
+
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var inmueble = await _context.Inmuebles.FindAsync(id);
+
+            if (inmueble == null)
+            {
+                return NotFound();
+            }
+
+            await CargarPropietarios();
+            await CargarTipos();
+
+            return View(inmueble);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(
+            int id,
+            Inmueble inmueble)
+        {
+            if (id != inmueble.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                var actual = await _context.Inmuebles.FindAsync(id);
+
+                if (actual == null)
+                {
+                    return NotFound();
+                }
+
+                actual.Direccion = inmueble.Direccion;
+                actual.Cupo = inmueble.Cupo;
+                actual.Latitud = inmueble.Latitud;
+                actual.Longitud = inmueble.Longitud;
+                actual.PrecioPorDia = inmueble.PrecioPorDia;
+                actual.PorcentajeReserva = inmueble.PorcentajeReserva;
+                actual.Disponible = inmueble.Disponible;
+                actual.PropietarioId = inmueble.PropietarioId;
+                actual.TipoId = inmueble.TipoId;
+
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            await CargarPropietarios();
+            await CargarTipos();
+
+            return View(inmueble);
+        }
+
+
+        // ELIMINAR INMUEBLE
+
+        [Authorize(Roles = "Administrador")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var inmueble = await _context.Inmuebles.FindAsync(id);
+
+            if (inmueble == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                _context.Inmuebles.Remove(inmueble);
+
+                await _context.SaveChangesAsync();
+
+                TempData["Ok"] =
+                    "Inmueble eliminado correctamente";
+            }
+            catch (DbUpdateException)
+            {
+                TempData["Error"] =
+                    "No se puede eliminar el inmueble porque tiene reservas o imagenes asociadas";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+
+        // CARGAR PROPIETARIOS
+
+        private async Task CargarPropietarios()
+        {
+            var propietarios = await _context.Propietarios
+                .OrderBy(p => p.Apellido)
+                .ThenBy(p => p.Nombre)
+                .ToListAsync();
+
+            ViewBag.Propietarios = new SelectList(
+                propietarios,
+                "Id",
+                "Apellido"
+            );
+        }
+
+        // CARGAR TIPOS
+
+        private async Task CargarTipos()
+        {
+            var tipos = await _context.TiposInmueble
+                .OrderBy(t => t.Nombre)
+                .ToListAsync();
+
+            ViewBag.Tipos = new SelectList(
+                tipos,
+                "Id",
+                "Nombre"
+            );
+        }
     }
-
-
-    // ELIMINAR INMUEBLE (solo Usuarios Administradores)
-    [Authorize(Roles = "Administrador")]
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Delete(int id)
-    {
-      var inmueble = await _context.Inmuebles.FindAsync(id);
-
-      if (inmueble == null)
-      {
-        return NotFound();
-      }
-
-      try
-      {
-        _context.Inmuebles.Remove(inmueble);
-        await _context.SaveChangesAsync();
-        TempData["Ok"] = "Inmueble eliminado correctamente.";
-      }
-      catch (DbUpdateException)
-      {
-        TempData["Error"] = "No se puede eliminar el inmueble porque tiene reservas o imagenes asociadas.";
-      }
-
-      return RedirectToAction(nameof(Index));
-    }
-
-
-    // CARGAR PROPIETARIOS
-
-    private async Task CargarPropietarios()
-    {
-      var propietarios = await _context.Propietarios
-          .OrderBy(p => p.Apellido)
-          .ThenBy(p => p.Nombre)
-          .ToListAsync();
-
-      ViewBag.Propietarios = new SelectList(
-          propietarios,
-          "Id",
-          "Apellido"
-      );
-    }
-
-    // CARGAR TIPOS
-
-    private async Task CargarTipos()
-    {
-      var tipos = await _context.TiposInmueble
-          .OrderBy(t => t.Nombre)
-          .ToListAsync();
-
-      ViewBag.Tipos = new SelectList(
-          tipos,
-          "Id",
-          "Nombre"
-      );
-    }
-  }
 }

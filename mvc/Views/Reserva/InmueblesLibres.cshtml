@@ -1,0 +1,57 @@
+@model IEnumerable<mvc.Models.Inmueble>
+
+<h1>Inmuebles libres</h1>
+
+<form method="get" class="mb-3 d-flex align-items-end gap-2">
+  <div>
+    <label>Desde</label>
+    <input type="date" name="desde" value="@ViewBag.Desde?.ToString("yyyy-MM-dd")" class="form-control" />
+  </div>
+  <div>
+    <label>Hasta</label>
+    <input type="date" name="hasta" value="@ViewBag.Hasta?.ToString("yyyy-MM-dd")" class="form-control" />
+  </div>
+  <button type="submit" class="btn btn-primary">Buscar</button>
+</form>
+
+@if (ViewBag.Error != null)
+{
+  <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Direccion</th>
+      <th>Tipo</th>
+      <th>Cupo</th>
+      <th>Precio por dia</th>
+      <th>Propietario</th>
+      <th>Acciones</th>
+
+    </tr>
+  </thead>
+  <tbody>
+    @foreach (var inmueble in Model)
+    {
+      <tr>
+        <td>@inmueble.Direccion</td>
+        <td>@inmueble.TipoInmueble?.Nombre</td>
+        <td>@inmueble.Cupo</td>
+        <td>@inmueble.PrecioPorDia</td>
+        <td>@inmueble.Propietario?.Nombre</td>
+        <td>
+          <a asp-controller="Reserva" asp-action="Create" asp-route-inmuebleId="@inmueble.Id"
+             asp-route-desde="@ViewBag.Desde.ToString("yyyy-MM-dd")"
+             asp-route-hasta="@ViewBag.Hasta.ToString("yyyy-MM-dd")" class="btn btn-sm btn-primary">
+            Reservar
+          </a>
+        </td>
+      </tr>
+
+    }
+  </tbody>
+</table>
+<div class="mt-4">
+  <a asp-controller="Reserva" asp-action="Index" class="btn btn-secondary">Volver</a>
+</div>
