@@ -1,0 +1,38 @@
+@model IEnumerable<mvc.Models.ViewModels.InmuebleReservaViewModel>
+
+<h1>Inmuebles mas reservados</h1>
+
+<p>
+    Reservas realizadas en los ultimos 365 días.
+</p>
+
+<table class="table">
+
+    <thead>
+        <tr>
+            <th>Código</th>
+            <th>Dirección</th>
+            <th>Propietario</th>
+            <th>Cantidad de reservas</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        @foreach (var inmueble in Model)
+        {
+            <tr>
+                <td>@inmueble.Id</td>
+                <td>@inmueble.Direccion</td>
+                <td>@inmueble.Propietario</td>
+                <td>@inmueble.CantidadReservas</td>
+            </tr>
+        }
+
+    </tbody>
+
+</table>
+
+<a asp-action="Index" class="btn btn-secondary">
+    Volver
+</a>
