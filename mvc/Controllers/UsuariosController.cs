@@ -29,13 +29,46 @@ namespace mvc.Controllers
         // =====================================================
         // LISTADO (solo administradores)
         // =====================================================
+        // Paginación de cuantos usuarios se muestran por pagina (igual que en Reserva/Inquilino)
+        private const int TamanioPagina = 3;
+
         [Authorize(Roles = "Administrador")]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int pagina = 1, string? q = null)
         {
-            var usuarios = await _context.Usuarios
+            if (pagina < 1) pagina = 1;
+
+            var query = _context.Usuarios.AsQueryable();
+
+            // Busqueda en servidor: nombre, apellido o email
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                query = query.Where(u =>
+                    u.Nombre.Contains(q) ||
+                    u.Apellido.Contains(q) ||
+                    u.Email.Contains(q));
+            }
+
+            query = query
                 .OrderBy(u => u.Apellido)
-                .ThenBy(u => u.Nombre)
+                .ThenBy(u => u.Nombre);
+
+            // Primero contamos, despues recortamos la pagina
+            var totalUsuarios = await query.CountAsync();
+            var totalPaginas = (int)Math.Ceiling(totalUsuarios / (double)TamanioPagina);
+            if (totalPaginas > 0 && pagina > totalPaginas)
+            {
+                pagina = totalPaginas;
+            }
+
+            var usuarios = await query
+                .Skip((pagina - 1) * TamanioPagina)
+                .Take(TamanioPagina)
                 .ToListAsync();
+
+            // La vista necesita estos valores para armar los links
+            ViewBag.PaginaActual = pagina;
+            ViewBag.TotalPaginas = totalPaginas;
+            ViewBag.Q = q ?? "";
 
             return View(usuarios);
         }
@@ -72,6 +105,13 @@ namespace mvc.Controllers
             if (!esValido)
             {
                 ModelState.AddModelError("", "Email o clave incorrectos");
+                return View(login);
+            }
+
+            // Un usuario desactivado no puede iniciar sesion
+            if (!usuario!.Activo)
+            {
+                ModelState.AddModelError("", "Usuario inactivo");
                 return View(login);
             }
 
@@ -269,6 +309,52 @@ namespace mvc.Controllers
                 TempData["Error"] = "No se pudo eliminar el usuario por restricciones de la base de datos.";
             }
 
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Baja logica: solo cambia Activo, no borra el registro
+        [Authorize(Roles = "Administrador")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Desactivar(int id)
+        {
+            // Un admin no puede desactivar su propio usuario
+            if (id == ObtenerIdUsuarioActual())
+            {
+                TempData["Error"] = "No podes desactivar tu propio usuario.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Traemos el original y copiamos solo Activo (no usamos Update)
+            var actual = await _context.Usuarios.FindAsync(id);
+            if (actual == null)
+            {
+                return NotFound();
+            }
+
+            actual.Activo = false;
+            await _context.SaveChangesAsync();
+
+            TempData["Ok"] = "Usuario desactivado correctamente.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Reactiva al usuario cambiando Activo de false a true
+        [Authorize(Roles = "Administrador")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Activar(int id)
+        {
+            var actual = await _context.Usuarios.FindAsync(id);
+            if (actual == null)
+            {
+                return NotFound();
+            }
+
+            actual.Activo = true;
+            await _context.SaveChangesAsync();
+
+            TempData["Ok"] = "Usuario activado correctamente.";
             return RedirectToAction(nameof(Index));
         }
 
