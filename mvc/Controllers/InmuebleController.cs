@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using mvc.Models;
+using mvc.Models.ViewModels;
 
 namespace mvc.Controllers
 {
@@ -290,6 +291,59 @@ namespace mvc.Controllers
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        // INFORME: INMUEBLES MÁS RESERVADOS EN LOS ÚLTIMOS 365 DÍAS
+
+        public async Task<IActionResult> MasReservados()
+        {
+            var fechaLimite = DateTime.UtcNow.AddDays(-365);
+
+            var datos = await _context.Inmuebles
+                .Include(i => i.Propietario)
+                .Select(i => new InmuebleReservaViewModel
+                {
+                    Id = i.Id,
+                    Direccion = i.Direccion,
+                    Propietario = i.Propietario != null
+                        ? i.Propietario.Nombre + " " + i.Propietario.Apellido
+                        : "",
+                    CantidadReservas = _context.Reservas.Count(r =>
+                        r.InmuebleId == i.Id &&
+                        r.FechaCreacion >= fechaLimite &&
+                        r.Estado != EstadoReserva.Cancelada)
+                })
+                .OrderByDescending(i => i.CantidadReservas)
+                .ThenBy(i => i.Direccion)
+                .ToListAsync();
+
+            return View(datos);
+        }
+
+        // INFORME: INMUEBLES SIN RESERVAS EN LOS ULTIMOS X DIAS
+
+        public async Task<IActionResult> SinReservas(int dias = 30)
+        {
+            if (dias < 1)
+            {
+                dias = 30;
+            }
+
+            var fechaLimite = DateTime.UtcNow.AddDays(-dias);
+
+            var inmuebles = await _context.Inmuebles
+                .Include(i => i.Propietario)
+                .Where(i =>
+                    !_context.Reservas.Any(r =>
+                        r.InmuebleId == i.Id &&
+                        r.FechaCreacion >= fechaLimite &&
+                        r.Estado != EstadoReserva.Cancelada))
+                .OrderBy(i => i.Direccion)
+                .ToListAsync();
+
+            ViewBag.Dias = dias;
+
+            return View(inmuebles);
         }
 
 
