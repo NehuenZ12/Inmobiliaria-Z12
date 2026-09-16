@@ -295,53 +295,114 @@ namespace mvc.Controllers
 
         // INFORME: INMUEBLES MÁS RESERVADOS EN LOS ÚLTIMOS 365 DÍAS
 
-        public async Task<IActionResult> MasReservados()
+        public async Task<IActionResult> MasReservados(int pagina = 1)
         {
+            if (pagina < 1)
+            {
+                pagina = 1;
+            }
+
+            int registrosPorPagina = 5;
+
             var fechaLimite = DateTime.UtcNow.AddDays(-365);
 
-            var datos = await _context.Inmuebles
+            var consulta = _context.Inmuebles
                 .Include(i => i.Propietario)
                 .Select(i => new InmuebleReservaViewModel
                 {
                     Id = i.Id,
+
                     Direccion = i.Direccion,
+
                     Propietario = i.Propietario != null
                         ? i.Propietario.Nombre + " " + i.Propietario.Apellido
                         : "",
+
                     CantidadReservas = _context.Reservas.Count(r =>
                         r.InmuebleId == i.Id &&
                         r.FechaCreacion >= fechaLimite &&
                         r.Estado != EstadoReserva.Cancelada)
                 })
                 .OrderByDescending(i => i.CantidadReservas)
-                .ThenBy(i => i.Direccion)
+                .ThenBy(i => i.Direccion);
+
+            // Cantidad total de registros
+            int totalRegistros = await consulta.CountAsync();
+
+            // Cantidad total de paginas
+            int totalPaginas = (int)Math.Ceiling(
+                totalRegistros / (double)registrosPorPagina
+            );
+
+            // Evitamos paginas invalidas
+            if (totalPaginas > 0 && pagina > totalPaginas)
+            {
+                pagina = totalPaginas;
+            }
+
+            // Traemos solamente los registros de la pagina actual
+            var datos = await consulta
+                .Skip((pagina - 1) * registrosPorPagina)
+                .Take(registrosPorPagina)
                 .ToListAsync();
+
+            ViewBag.PaginaActual = pagina;
+            ViewBag.TotalPaginas = totalPaginas;
 
             return View(datos);
         }
 
         // INFORME: INMUEBLES SIN RESERVAS EN LOS ULTIMOS X DIAS
 
-        public async Task<IActionResult> SinReservas(int dias = 30)
+        public async Task<IActionResult> SinReservas(
+            int dias = 30,
+            int pagina = 1)
         {
             if (dias < 1)
             {
                 dias = 30;
             }
 
+            if (pagina < 1)
+            {
+                pagina = 1;
+            }
+
+            int registrosPorPagina = 5;
+
             var fechaLimite = DateTime.UtcNow.AddDays(-dias);
 
-            var inmuebles = await _context.Inmuebles
+            var consulta = _context.Inmuebles
                 .Include(i => i.Propietario)
                 .Where(i =>
                     !_context.Reservas.Any(r =>
                         r.InmuebleId == i.Id &&
                         r.FechaCreacion >= fechaLimite &&
                         r.Estado != EstadoReserva.Cancelada))
-                .OrderBy(i => i.Direccion)
+                .OrderBy(i => i.Direccion);
+
+            // Cantidad total de registros
+            int totalRegistros = await consulta.CountAsync();
+
+            // Cantidad total de páginas
+            int totalPaginas = (int)Math.Ceiling(
+                totalRegistros / (double)registrosPorPagina
+            );
+
+            if (totalPaginas > 0 && pagina > totalPaginas)
+            {
+                pagina = totalPaginas;
+            }
+
+            // Registros de la página actual
+            var inmuebles = await consulta
+                .Skip((pagina - 1) * registrosPorPagina)
+                .Take(registrosPorPagina)
                 .ToListAsync();
 
             ViewBag.Dias = dias;
+            ViewBag.PaginaActual = pagina;
+            ViewBag.TotalPaginas = totalPaginas;
 
             return View(inmuebles);
         }

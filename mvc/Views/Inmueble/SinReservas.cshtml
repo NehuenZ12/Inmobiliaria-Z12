@@ -5,7 +5,7 @@
 <form asp-action="SinReservas" method="get" class="mb-4">
 
     <label class="form-label">
-        Cantidad de días
+        Cantidad de dias
     </label>
 
     <div class="d-flex gap-2">
@@ -26,12 +26,13 @@
 
 </form>
 
+
 <table class="table">
 
     <thead>
         <tr>
-            <th>Código</th>
-            <th>Dirección</th>
+            <th>Codigo</th>
+            <th>Direccion</th>
             <th>Propietario</th>
             <th>Disponible</th>
         </tr>
@@ -62,6 +63,55 @@
     </tbody>
 
 </table>
+
+
+<!-- PAGINADO -->
+
+@if (ViewBag.TotalPaginas > 1)
+{
+    <nav class="mt-3">
+
+        <ul class="pagination">
+
+            <li class="page-item @(ViewBag.PaginaActual == 1 ? "disabled" : "")">
+                <a class="page-link"
+                   asp-action="SinReservas"
+                   asp-route-dias="@ViewBag.Dias"
+                   asp-route-pagina="@(ViewBag.PaginaActual - 1)">
+                    Anterior
+                </a>
+            </li>
+
+
+            @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+            {
+                <li class="page-item @(i == ViewBag.PaginaActual ? "active" : "")">
+
+                    <a class="page-link"
+                       asp-action="SinReservas"
+                       asp-route-dias="@ViewBag.Dias"
+                       asp-route-pagina="@i">
+                        @i
+                    </a>
+
+                </li>
+            }
+
+
+            <li class="page-item @(ViewBag.PaginaActual == ViewBag.TotalPaginas ? "disabled" : "")">
+                <a class="page-link"
+                   asp-action="SinReservas"
+                   asp-route-dias="@ViewBag.Dias"
+                   asp-route-pagina="@(ViewBag.PaginaActual + 1)">
+                    Siguiente
+                </a>
+            </li>
+
+        </ul>
+
+    </nav>
+}
+
 
 <a asp-action="Index"
    class="btn btn-secondary">
