@@ -16,8 +16,10 @@ namespace mvc.Controllers
       _context = context;
     }
 
+    private const int TamanioPagina = 3;
+
     // LISTAR PAGOS POR RESERVA
-    public async Task<IActionResult> Index(int idReserva)
+    public async Task<IActionResult> Index(int idReserva, int pagina = 1, string? concepto = null, EstadoPago? estado = null)
     {
       // Si la reserva no existe no mostramos el listado
       if (!await CargarDatosReserva(idReserva))
@@ -25,28 +27,40 @@ namespace mvc.Controllers
         return NotFound();
       }
 
-      var pagos = await _context.Pagos
-          .Where(p => p.ReservaId == idReserva)
+      if (pagina < 1) pagina = 1;
+
+      var query = _context.Pagos.Where(p => p.ReservaId == idReserva);
+
+      if (!string.IsNullOrWhiteSpace(concepto))
+      {
+        query = query.Where(p => p.Concepto.Contains(concepto));
+      }
+
+      if (estado.HasValue)
+      {
+        query = query.Where(p => p.Estado == estado.Value);
+      }
+
+      query = query
           .OrderByDescending(p => p.Fecha)
-          .ThenByDescending(p => p.Id)
+          .ThenByDescending(p => p.Id);
+
+      var totalPagos = await query.CountAsync();
+      var totalPaginas = (int)Math.Ceiling(totalPagos / (double)TamanioPagina);
+      if (totalPaginas > 0 && pagina > totalPaginas)
+      {
+        pagina = totalPaginas;
+      }
+
+      var pagos = await query
+          .Skip((pagina - 1) * TamanioPagina)
+          .Take(TamanioPagina)
           .ToListAsync();
 
-      // Cargamos nombres de usuarios para la auditoría
-      var idsUsuarios = pagos.Select(p => p.UsuarioCreadorId)
-          .Union(pagos.Where(p => p.UsuarioAnuladorId.HasValue).Select(p => p.UsuarioAnuladorId!.Value))
-          .Distinct();
-
-      var nombres = await _context.Usuarios
-          .Where(u => idsUsuarios.Contains(u.Id))
-          .ToDictionaryAsync(u => u.Id, u => u.NombreCompleto);
-
-      foreach (var pago in pagos)
-      {
-        pago.NombreUsuarioCreador = nombres.GetValueOrDefault(pago.UsuarioCreadorId);
-        pago.NombreUsuarioAnulador = pago.UsuarioAnuladorId.HasValue
-            ? nombres.GetValueOrDefault(pago.UsuarioAnuladorId.Value)
-            : null;
-      }
+      ViewBag.PaginaActual = pagina;
+      ViewBag.TotalPaginas = totalPaginas;
+      ViewBag.ConceptoFiltro = concepto ?? "";
+      ViewBag.EstadoFiltro = estado;
 
       return View(pagos);
     }
@@ -61,7 +75,7 @@ namespace mvc.Controllers
         return NotFound();
       }
 
-      // Cargamos nombres de usuarios para la auditoría
+      // Cargamos nombres de usuarios para la auditoría (quien los creó y/o anuló)
       var idsUsuarios = new List<int> { pago.UsuarioCreadorId };
       if (pago.UsuarioAnuladorId.HasValue)
       {
@@ -193,6 +207,7 @@ namespace mvc.Controllers
     }
 
     // ANULAR PAGO (baja lógica)
+    [Authorize(Roles = "Administrador")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Anular(int id, int reservaId)
