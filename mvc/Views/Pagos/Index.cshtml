@@ -1,5 +1,12 @@
 @model IEnumerable<mvc.Models.Pago>
 
+@{
+  int paginaActual = ViewBag.PaginaActual ?? 1;
+  int totalPaginas = ViewBag.TotalPaginas ?? 0;
+  string conceptoFiltro = ViewBag.ConceptoFiltro ?? "";
+  EstadoPago? estadoFiltro = ViewBag.EstadoFiltro as EstadoPago?;
+}
+
 <h1>Pagos de la reserva @ViewBag.ReservaId</h1>
 
 <div class="mb-3">
@@ -19,6 +26,38 @@
 {
   <div class="alert alert-danger">@TempData["Error"]</div>
 }
+
+<form method="get" asp-action="Index" class="row g-2 align-items-end mb-3">
+  <input type="hidden" name="idReserva" value="@ViewBag.ReservaId" />
+
+  <div class="col-md-4">
+    <label class="form-label" for="concepto">Concepto</label>
+    <input id="concepto" name="concepto" class="form-control" value="@conceptoFiltro" />
+  </div>
+
+  <div class="col-md-3">
+    <label class="form-label" for="estado">Estado</label>
+    <select id="estado" name="estado" class="form-select">
+      <option value="">Todos</option>
+      @foreach (EstadoPago valor in Enum.GetValues(typeof(EstadoPago)))
+      {
+        if (estadoFiltro == valor)
+        {
+          <option value="@valor" selected>@valor</option>
+        }
+        else
+        {
+          <option value="@valor">@valor</option>
+        }
+      }
+    </select>
+  </div>
+
+  <div class="col-md-5">
+    <button type="submit" class="btn btn-outline-primary">Buscar</button>
+    <a asp-action="Index" asp-route-idReserva="@ViewBag.ReservaId" class="btn btn-outline-secondary">Limpiar</a>
+  </div>
+</form>
 
 @if (ViewBag.PuedeCargarPago)
 {
@@ -60,34 +99,90 @@ else
             {
               <a asp-action="EditarConcepto" asp-route-id="@pago.Id" class="btn btn-primary btn-sm">Editar concepto</a>
 
-              <form asp-action="Anular" asp-route-id="@pago.Id" asp-route-reservaId="@pago.ReservaId" method="post"
-                    style="display:inline">
-                <button type="submit" class="btn btn-danger btn-sm"
-                        onclick="return confirm('Anular este pago?')">Anular</button>
-              </form>
+              @if (User.IsInRole("Administrador"))
+              {
+                <form asp-action="Anular" asp-route-id="@pago.Id" asp-route-reservaId="@pago.ReservaId" method="post"
+                      style="display:inline">
+                  <button type="submit" class="btn btn-danger btn-sm"
+                          onclick="return confirm('Anular este pago?')">Anular</button>
+                </form>
+              }
             }
           </td>
         </tr>
-
-        @if (User.IsInRole("Administrador") && (!string.IsNullOrEmpty(pago.NombreUsuarioCreador) ||
-      !string.IsNullOrEmpty(pago.NombreUsuarioAnulador)))
-        {
-          <tr class="@(pago.Estado == EstadoPago.Anulado ? "table-secondary" : "")">
-            <td colspan="6" class="text-muted small">
-              @if (!string.IsNullOrEmpty(pago.NombreUsuarioCreador))
-              {
-                <span>Creado por: @pago.NombreUsuarioCreador</span>
-              }
-              @if (!string.IsNullOrEmpty(pago.NombreUsuarioAnulador))
-              {
-                <span class="ms-3">Anulado por: @pago.NombreUsuarioAnulador</span>
-              }
-            </td>
-          </tr>
-        }
       }
     </tbody>
   </table>
+}
+
+@{
+  int ventana = 2;
+  int desde = Math.Max(1, paginaActual - ventana);
+  int hasta = Math.Min(totalPaginas, paginaActual + ventana);
+}
+
+@if (totalPaginas > 1)
+{
+  <nav class="mt-3">
+    <ul class="pagination">
+      <li class="page-item @(paginaActual <= 1 ? "disabled" : "")">
+        <a class="page-link" asp-action="Index"
+           asp-route-idReserva="@ViewBag.ReservaId"
+           asp-route-concepto="@conceptoFiltro"
+           asp-route-estado="@estadoFiltro"
+           asp-route-pagina="@(paginaActual - 1)">Anterior</a>
+      </li>
+
+      @if (desde > 1)
+      {
+        <li class="page-item">
+          <a class="page-link" asp-action="Index"
+             asp-route-idReserva="@ViewBag.ReservaId"
+             asp-route-concepto="@conceptoFiltro"
+             asp-route-estado="@estadoFiltro"
+             asp-route-pagina="1">1</a>
+        </li>
+        if (desde > 2)
+        {
+          <li class="page-item disabled"><span class="page-link">...</span></li>
+        }
+      }
+
+      @for (int i = desde; i <= hasta; i++)
+      {
+        <li class="page-item @(i == paginaActual ? "active" : "")">
+          <a class="page-link" asp-action="Index"
+             asp-route-idReserva="@ViewBag.ReservaId"
+             asp-route-concepto="@conceptoFiltro"
+             asp-route-estado="@estadoFiltro"
+             asp-route-pagina="@i">@i</a>
+        </li>
+      }
+
+      @if (hasta < totalPaginas)
+      {
+        if (hasta < totalPaginas - 1)
+        {
+          <li class="page-item disabled"><span class="page-link">...</span></li>
+        }
+        <li class="page-item">
+          <a class="page-link" asp-action="Index"
+             asp-route-idReserva="@ViewBag.ReservaId"
+             asp-route-concepto="@conceptoFiltro"
+             asp-route-estado="@estadoFiltro"
+             asp-route-pagina="@totalPaginas">@totalPaginas</a>
+        </li>
+      }
+
+      <li class="page-item @(paginaActual >= totalPaginas ? "disabled" : "")">
+        <a class="page-link" asp-action="Index"
+           asp-route-idReserva="@ViewBag.ReservaId"
+           asp-route-concepto="@conceptoFiltro"
+           asp-route-estado="@estadoFiltro"
+           asp-route-pagina="@(paginaActual + 1)">Siguiente</a>
+      </li>
+    </ul>
+  </nav>
 }
 
 <a asp-controller="Reserva" asp-action="Detalles" asp-route-id="@ViewBag.ReservaId" class="btn btn-secondary">Volver</a>
