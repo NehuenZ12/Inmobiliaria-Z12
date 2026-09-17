@@ -5,6 +5,7 @@ using mvc.Models;
 
 namespace mvc.Controllers
 {
+    [Authorize]
     public class PropietarioController : Controller
     {
         private readonly AppDbContext _context;
