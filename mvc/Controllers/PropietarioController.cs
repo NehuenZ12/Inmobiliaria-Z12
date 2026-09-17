@@ -15,9 +15,60 @@ namespace mvc.Controllers
         }
 
         // LISTAR PROPIETARIOS
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+            string? buscar,
+            int pagina = 1)
         {
-            var propietarios = await _context.Propietarios.ToListAsync();
+            // Cantidad de propietarios que se muestran por página
+            int registrosPorPagina = 5;
+
+            // Consulta base
+            var consulta = _context.Propietarios.AsQueryable();
+
+            // Búsqueda en servidor
+            if (!string.IsNullOrWhiteSpace(buscar))
+            {
+                buscar = buscar.Trim();
+
+                consulta = consulta.Where(p =>
+                    p.Nombre.Contains(buscar) ||
+                    p.Apellido.Contains(buscar) ||
+                    p.Dni.Contains(buscar) ||
+                    (p.Email != null && p.Email.Contains(buscar))
+                );
+            }
+
+            // Cantidad total de registros
+            int totalRegistros = await consulta.CountAsync();
+
+            // Cantidad total de páginas
+            int totalPaginas = (int)Math.Ceiling(
+                totalRegistros / (double)registrosPorPagina
+            );
+
+            // Evitar páginas inválidas
+            if (pagina < 1)
+            {
+                pagina = 1;
+            }
+
+            if (totalPaginas > 0 && pagina > totalPaginas)
+            {
+                pagina = totalPaginas;
+            }
+
+            // Paginado en servidor
+            var propietarios = await consulta
+                .OrderBy(p => p.Apellido)
+                .ThenBy(p => p.Nombre)
+                .Skip((pagina - 1) * registrosPorPagina)
+                .Take(registrosPorPagina)
+                .ToListAsync();
+
+            // Datos para la vista
+            ViewBag.Buscar = buscar;
+            ViewBag.PaginaActual = pagina;
+            ViewBag.TotalPaginas = totalPaginas;
 
             return View(propietarios);
         }

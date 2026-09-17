@@ -4,21 +4,72 @@
 
 @if (TempData["Ok"] != null)
 {
-    <div class="alert alert-success">@TempData["Ok"]</div>
+    <div class="alert alert-success">
+        @TempData["Ok"]
+    </div>
 }
 
 @if (TempData["Error"] != null)
 {
-    <div class="alert alert-danger">@TempData["Error"]</div>
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
 }
 
-<!-- Boton para crear un nuevo propietario -->
+
+<!-- =========================================================
+     CREAR
+     ========================================================= -->
+
 <a asp-action="Create" class="btn btn-primary mb-3">
     +
 </a>
 
+
+<!-- =========================================================
+     BÚSQUEDA
+     ========================================================= -->
+
+<form asp-action="Index" method="get" class="mb-4">
+
+    <div class="row">
+
+        <div class="col-md-6">
+
+            <label class="form-label">
+                Buscar propietario
+            </label>
+
+            <input type="text"
+                   name="buscar"
+                   value="@ViewBag.Buscar"
+                   class="form-control"
+                   placeholder="Nombre, apellido, DNI o email" />
+
+        </div>
+
+        <div class="col-md-2 d-flex align-items-end">
+
+            <button type="submit"
+                    class="btn btn-primary">
+                Buscar
+            </button>
+
+        </div>
+
+    </div>
+
+</form>
+
+
+<!-- =========================================================
+     TABLA
+     ========================================================= -->
+
 <table class="table">
+
     <thead>
+
         <tr>
             <th>Código</th>
             <th>Nombre</th>
@@ -28,28 +79,48 @@
             <th>Email</th>
             <th>Acciones</th>
         </tr>
+
     </thead>
 
     <tbody>
+
         @foreach (var propietario in Model)
         {
             <tr>
-                <td>@propietario.Id</td>
-                <td>@propietario.Nombre</td>
-                <td>@propietario.Apellido</td>
-                <td>@propietario.Dni</td>
-                <td>@propietario.Telefono</td>
-                <td>@propietario.Email</td>
 
                 <td>
-                    <!-- Boton Editar -->
+                    @propietario.Id
+                </td>
+
+                <td>
+                    @propietario.Nombre
+                </td>
+
+                <td>
+                    @propietario.Apellido
+                </td>
+
+                <td>
+                    @propietario.Dni
+                </td>
+
+                <td>
+                    @propietario.Telefono
+                </td>
+
+                <td>
+                    @propietario.Email
+                </td>
+
+                <td>
+
                     <a asp-action="Edit"
                        asp-route-id="@propietario.Id"
                        class="btn btn-primary">
                         Editar
                     </a>
 
-                    <!-- Boton Eliminar (solo Usuarios Administradores) -->
+
                     @if (User.IsInRole("Administrador"))
                     {
                         <form asp-action="Delete"
@@ -65,8 +136,75 @@
 
                         </form>
                     }
+
                 </td>
+
             </tr>
         }
+
     </tbody>
+
 </table>
+
+
+<!-- =========================================================
+     PAGINADO
+     ========================================================= -->
+
+@if (ViewBag.TotalPaginas > 1)
+{
+    <nav class="mt-3">
+
+        <ul class="pagination">
+
+            <!-- Anterior -->
+            <li class="page-item @(ViewBag.PaginaActual == 1 ? "disabled" : "")">
+
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-route-pagina="@(ViewBag.PaginaActual - 1)"
+                   asp-route-buscar="@ViewBag.Buscar">
+
+                    Anterior
+
+                </a>
+
+            </li>
+
+
+            <!-- Numeros -->
+            @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+            {
+                <li class="page-item @(i == ViewBag.PaginaActual ? "active" : "")">
+
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-pagina="@i"
+                       asp-route-buscar="@ViewBag.Buscar">
+
+                        @i
+
+                    </a>
+
+                </li>
+            }
+
+
+            <!-- Siguiente -->
+            <li class="page-item @(ViewBag.PaginaActual == ViewBag.TotalPaginas ? "disabled" : "")">
+
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-route-pagina="@(ViewBag.PaginaActual + 1)"
+                   asp-route-buscar="@ViewBag.Buscar">
+
+                    Siguiente
+
+                </a>
+
+            </li>
+
+        </ul>
+
+    </nav>
+}
