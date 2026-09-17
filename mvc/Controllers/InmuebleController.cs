@@ -110,10 +110,12 @@ namespace mvc.Controllers
 
         // CREAR INMUEBLE
 
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(string? buscarTipo)
         {
             await CargarPropietarios();
             await CargarTipos();
+
+            ViewBag.BuscarTipo = buscarTipo;
 
             return View();
         }
@@ -426,9 +428,19 @@ namespace mvc.Controllers
 
         // CARGAR TIPOS
 
-        private async Task CargarTipos()
+        private async Task CargarTipos(string? buscarTipo = null)
         {
-            var tipos = await _context.TiposInmueble
+            var consulta = _context.TiposInmueble.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(buscarTipo))
+            {
+                buscarTipo = buscarTipo.Trim();
+
+                consulta = consulta.Where(t =>
+                    t.Nombre.Contains(buscarTipo));
+            }
+
+            var tipos = await consulta
                 .OrderBy(t => t.Nombre)
                 .ToListAsync();
 
