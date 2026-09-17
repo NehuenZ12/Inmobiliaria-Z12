@@ -2,7 +2,8 @@
 
 Proyecto Inmobiliaria Laboratorio 2
 
----
+USUARIO ADMINISTRADOR: admin@admin.com
+CLAVE: admin123
 
 ## 👥 Integrantes del Grupo
 
