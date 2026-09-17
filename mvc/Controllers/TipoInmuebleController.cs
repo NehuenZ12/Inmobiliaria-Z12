@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using mvc.Models;
@@ -14,9 +15,53 @@ namespace mvc.Controllers
         }
 
         // LISTAR
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+            string? buscar,
+            int pagina = 1)
         {
-            var tipos = await _context.TiposInmueble.ToListAsync();
+            int registrosPorPagina = 5;
+
+            var consulta = _context.TiposInmueble.AsQueryable();
+
+            // Buscar por nombre
+            if (!string.IsNullOrWhiteSpace(buscar))
+            {
+                buscar = buscar.Trim();
+
+                consulta = consulta.Where(t =>
+                    t.Nombre.Contains(buscar));
+            }
+
+            // Cantidad total de registros
+            int totalRegistros = await consulta.CountAsync();
+
+            // Cantidad total de paginas
+            int totalPaginas = (int)Math.Ceiling(
+                totalRegistros / (double)registrosPorPagina
+            );
+
+            // Evitar paginas invalidas
+            if (pagina < 1)
+            {
+                pagina = 1;
+            }
+
+            if (totalPaginas > 0 && pagina > totalPaginas)
+            {
+                pagina = totalPaginas;
+            }
+
+            // Obtener solamente los registros de la pagina actual
+            var tipos = await consulta
+                .OrderBy(t => t.Nombre)
+                .Skip((pagina - 1) * registrosPorPagina)
+                .Take(registrosPorPagina)
+                .ToListAsync();
+
+            // Datos para la vista
+            ViewBag.Buscar = buscar;
+            ViewBag.PaginaActual = pagina;
+            ViewBag.TotalPaginas = totalPaginas;
 
             return View(tipos);
         }
@@ -92,6 +137,7 @@ namespace mvc.Controllers
         }
 
         // ELIMINAR
+        [Authorize(Roles = "Administrador")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)

@@ -1,20 +1,49 @@
 @model IEnumerable<mvc.Models.TipoInmueble>
 
+@{
+    ViewData["Title"] = "Tipos de Inmueble";
+}
+
 <h1>Tipos de Inmueble</h1>
 
-@if (TempData["Ok"] != null)
+@if (TempData["Mensaje"] != null)
 {
-    <div class="alert alert-success">@TempData["Ok"]</div>
+    <div class="alert alert-success">
+        @TempData["Mensaje"]
+    </div>
 }
 
 @if (TempData["Error"] != null)
 {
-    <div class="alert alert-danger">@TempData["Error"]</div>
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
 }
 
-<a asp-action="Create" class="btn btn-primary mb-3">
-    +
-</a>
+<p>
+    <a asp-action="Create" class="btn btn-primary">
+        + Nuevo tipo
+    </a>
+</p>
+
+<!-- Buscador -->
+<form asp-action="Index" method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text"
+               name="buscar"
+               value="@ViewBag.Buscar"
+               class="form-control"
+               placeholder="Buscar por nombre" />
+
+        <button type="submit" class="btn btn-secondary">
+            Buscar
+        </button>
+
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Limpiar
+        </a>
+    </div>
+</form>
 
 <table class="table">
     <thead>
@@ -35,24 +64,75 @@
                 <td>
                     <a asp-action="Edit"
                        asp-route-id="@tipo.Id"
-                       class="btn btn-primary">
+                       class="btn btn-sm btn-warning">
                         Editar
                     </a>
 
-                    <form asp-action="Delete"
-                          asp-route-id="@tipo.Id"
-                          method="post"
-                          style="display:inline">
+                    @if (User.IsInRole("Administrador"))
+                    {
+                        <form asp-action="Delete"
+                            method="post"
+                            style="display:inline;">
+                            
+                            <input type="hidden" name="id" value="@tipo.Id" />
 
-                        <button type="submit"
-                                class="btn btn-danger"
-                                onclick="return confirm('¿Está seguro de eliminar este tipo de inmueble?')">
-                            Eliminar
-                        </button>
-
-                    </form>
+                            <button type="submit"
+                                    class="btn btn-sm btn-danger">
+                                Eliminar
+                            </button>
+                        </form>
+                    }
                 </td>
             </tr>
         }
     </tbody>
 </table>
+
+<!-- Paginado -->
+@if (ViewBag.TotalPaginas > 1)
+{
+    <nav>
+        <ul class="pagination">
+
+            <!-- Anterior -->
+            @if (ViewBag.PaginaActual > 1)
+            {
+                <li class="page-item">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-pagina="@(ViewBag.PaginaActual - 1)"
+                       asp-route-buscar="@ViewBag.Buscar">
+                        Anterior
+                    </a>
+                </li>
+            }
+
+            <!-- Numeros de pagina -->
+            @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+            {
+                <li class="page-item @(i == ViewBag.PaginaActual ? "active" : "")">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-pagina="@i"
+                       asp-route-buscar="@ViewBag.Buscar">
+                        @i
+                    </a>
+                </li>
+            }
+
+            <!-- Siguiente -->
+            @if (ViewBag.PaginaActual < ViewBag.TotalPaginas)
+            {
+                <li class="page-item">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-pagina="@(ViewBag.PaginaActual + 1)"
+                       asp-route-buscar="@ViewBag.Buscar">
+                        Siguiente
+                    </a>
+                </li>
+            }
+
+        </ul>
+    </nav>
+}
