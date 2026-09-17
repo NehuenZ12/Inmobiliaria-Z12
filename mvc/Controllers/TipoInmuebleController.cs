@@ -5,6 +5,7 @@ using mvc.Models;
 
 namespace mvc.Controllers
 {
+    [Authorize]
     public class TipoInmuebleController : Controller
     {
         private readonly AppDbContext _context;
