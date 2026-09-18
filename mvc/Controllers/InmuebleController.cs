@@ -7,7 +7,7 @@ using mvc.Models.ViewModels;
 
 namespace mvc.Controllers
 {
-    [Authorize]
+    
     public class InmuebleController : Controller
     {
         private readonly AppDbContext _context;
