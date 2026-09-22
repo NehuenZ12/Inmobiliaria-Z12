@@ -333,7 +333,7 @@ Los tres enums se persisten como texto en la base de datos (`.HasConversion<stri
 | `Port`     | Puerto de conexion                | `5432`            |
 | `Database` | Nombre de la base de datos        | `inmobiliaria`    |
 | `Username` | Usuario de PostgreSQL             | `postgres`        |
-| `Password` | Contrasena del usuario            | _(tu contrasena)_ |
+| `Password` | Contrasena del usuario            | _(tu contraseña)_ |
 
 ---
 
@@ -357,7 +357,7 @@ Luego abrir en el navegador la URL que indique la terminal (por ejemplo `http://
 
 ### Usuario de prueba
 
-| Email             | Contrasena | Rol           |
+| Email             | Contraseña | Rol           |
 | ----------------- | ---------- | ------------- |
 | `admin@admin.com` | admin123   | Administrador |
 
@@ -419,7 +419,7 @@ Luego abrir en el navegador la URL que indique la terminal (por ejemplo `http://
 - Los listados de Propietarios, Inquilinos, Inmuebles y Reservas usan paginacion en servidor (`Skip`/`Take`).
 - El target framework del proyecto es **.NET 10.0**.
 - El puerto por defecto de la aplicacion puede variar segun `Properties/launchSettings.json`.
-- Para desarrollo, se recomienda usar **User Secrets** o variables de entorno para no exponer la contrasena de PostgreSQL en el repositorio (el `appsettings.json` versionado trae la cadena de conexion vacia a proposito).
+- Para desarrollo, se recomienda usar **User Secrets** o variables de entorno para no exponer la contraseña de PostgreSQL en el repositorio (el `appsettings.json` versionado trae la cadena de conexion vacia a proposito).
 
 ---
 
