@@ -202,14 +202,16 @@ namespace mvc.Controllers
 
         // EDITAR INMUEBLE
 
-        public async Task<IActionResult> Edit(int? id)
+       public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var inmueble = await _context.Inmuebles.FindAsync(id);
+            var inmueble = await _context.Inmuebles
+                .Include(i => i.Imagenes)
+                .FirstOrDefaultAsync(i => i.Id == id);
 
             if (inmueble == null)
             {
@@ -226,7 +228,8 @@ namespace mvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(
             int id,
-            Inmueble inmueble)
+            Inmueble inmueble,
+            List<IFormFile>? imagenes)
         {
             if (id != inmueble.Id)
             {
@@ -242,6 +245,8 @@ namespace mvc.Controllers
                     return NotFound();
                 }
 
+                // ACTUALIZAR DATOS DEL INMUEBLE
+
                 actual.Direccion = inmueble.Direccion;
                 actual.Cupo = inmueble.Cupo;
                 actual.Latitud = inmueble.Latitud;
@@ -252,10 +257,96 @@ namespace mvc.Controllers
                 actual.PropietarioId = inmueble.PropietarioId;
                 actual.TipoId = inmueble.TipoId;
 
+                // REEMPLAZAR IMAGENES SI SE CARGARON NUEVAS
+
+                if (imagenes != null && imagenes.Count > 0)
+                {
+                    string carpeta = Path.Combine(
+                        _environment.WebRootPath,
+                        "uploads",
+                        "inmuebles"
+                    );
+
+                    if (!Directory.Exists(carpeta))
+                    {
+                        Directory.CreateDirectory(carpeta);
+                    }
+
+                    // Buscar imagenes anteriores
+                    var imagenesAnteriores = await _context.Imagenes
+                        .Where(i => i.InmuebleId == actual.Id)
+                        .ToListAsync();
+
+                    // Eliminar archivos anteriores
+                    foreach (var imagenAnterior in imagenesAnteriores)
+                    {
+                        string rutaFisica = Path.Combine(
+                            _environment.WebRootPath,
+                            imagenAnterior.Url.TrimStart('/').Replace(
+                                "/",
+                                Path.DirectorySeparatorChar.ToString()
+                            )
+                        );
+
+                        if (System.IO.File.Exists(rutaFisica))
+                        {
+                            System.IO.File.Delete(rutaFisica);
+                        }
+                    }
+
+                    // Eliminar registros anteriores de la base
+                    _context.Imagenes.RemoveRange(imagenesAnteriores);
+
+                    // Guardar las nuevas imagenes
+                    bool esPrimeraImagen = true;
+
+                    foreach (var imagen in imagenes)
+                    {
+                        if (imagen.Length == 0)
+                        {
+                            continue;
+                        }
+
+                        string extension = Path.GetExtension(imagen.FileName);
+
+                        string nombreArchivo =
+                            Guid.NewGuid().ToString() + extension;
+
+                        string rutaFisicaNueva = Path.Combine(
+                            carpeta,
+                            nombreArchivo
+                        );
+
+                        using (var stream = new FileStream(
+                            rutaFisicaNueva,
+                            FileMode.Create))
+                        {
+                            await imagen.CopyToAsync(stream);
+                        }
+
+                        var nuevaImagen = new Imagen
+                        {
+                            Url = "/uploads/inmuebles/" + nombreArchivo,
+                            Descripcion = imagen.FileName,
+                            EsPrincipal = esPrimeraImagen,
+                            InmuebleId = actual.Id
+                        };
+
+                        _context.Imagenes.Add(nuevaImagen);
+
+                        esPrimeraImagen = false;
+                    }
+                }
+
                 await _context.SaveChangesAsync();
 
                 return RedirectToAction(nameof(Index));
             }
+
+            // Volver a cargar las imagenes si hay errores de validacion
+            inmueble.Imagenes = await _context.Imagenes
+                .Where(i => i.InmuebleId == inmueble.Id)
+                .ToListAsync();
 
             await CargarPropietarios();
             await CargarTipos();
